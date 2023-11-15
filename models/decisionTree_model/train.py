@@ -11,6 +11,9 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import dask.dataframe as dd
 from imblearn.over_sampling import RandomOverSampler
 from utils import save_model, get_dataset_from_directories, evaluate_classification
+from pycaret.classification import setup
+from pycaret.classification import compare_models
+from flaml import AutoML
 
 
 MAIN_VERSION = 1
@@ -21,10 +24,11 @@ SAVE_FOLDER = "./saved_models"
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
     df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
-    df.dropna(inplace=True)
-    df.drop_duplicates(keep="first", inplace=True)
+    df = df.dropna()
+    df = df.drop_duplicates(keep="first")
     indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
-    return df[indices_to_keep]
+    df = df[indices_to_keep]
+    return df
 
 # %%
 def standarize_dataset(X):
@@ -103,6 +107,7 @@ def preprocess_attack_y(df_y):
     attack_labels = df_y[df_y.columns[0]].values.reshape(-1, 1)
     attack_labels = onehotencoder_attack.fit_transform(attack_labels).toarray()
     # print(attack_labels, attack_labels.shape)
+    save_model(onehotencoder_attack, "onehotencoder_attack", MAIN_VERSION, SAVE_FOLDER)
     return attack_labels
 
 
@@ -126,12 +131,18 @@ def preprocess(df):
 
     # %%
     # Oversampling
-    # print(np.sum(y_attack_train, axis=0))
+    # print("Over sampling")
     # sampler = RandomOverSampler(sampling_strategy="all")
     # X_attack_train, y_attack_train = sampler.fit_resample(X_attack_train, y_attack_train)
 
     return (X_train, X_test, y_train, y_test), (X_attack_train, X_attack_test, y_attack_train, y_attack_test)
 
+
+def create_test_data():
+    df = get_dataset_from_directories(["../../datasets/CIC-IDS-2017/MachineLearningCVE/"])
+    df = df.drop(df.columns[-1], axis=1)
+    df.to_csv("../../datasets/test.csv", index=False)
+    print("Test Dataset created")
 
 def train():
     # %%
@@ -166,18 +177,18 @@ def train():
     # save_model(KNN_Classifier, "../saved_models/2023-11-11_KNN_classifier_v1.pkl")
 
     # %%
-    # Decision Trees
+    # Decision Trees Anomaly Detection
     # This one is really good for Benign and not Benign
-    decision_tree = DecisionTreeClassifier(max_depth=13)
-    decision_tree.fit(X_train, y_train)
-    save_model(decision_tree, "decision_tree_anomaly", MAIN_VERSION, SAVE_FOLDER)
-    evaluate_classification(decision_tree, "Traffic Classification", X_train, X_test, y_train, y_test)
+    # decision_tree = DecisionTreeClassifier(max_depth=13)
+    # decision_tree.fit(X_train, y_train)
+    # save_model(decision_tree, "decision_tree_anomaly", MAIN_VERSION, SAVE_FOLDER)
+    # evaluate_classification(decision_tree, "Traffic Classification", X_train, X_test, y_train, y_test)
 
-    # This one is good for attack classification
-    decision_tree_attack = DecisionTreeClassifier(max_depth=9)
-    decision_tree.fit(X_attack_train, y_attack_train)
-    save_model(decision_tree_attack, "decision_tree_attack_type", MAIN_VERSION, SAVE_FOLDER)
-    evaluate_classification(decision_tree, "Traffic Classification Attack", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
+    # Decision Trees Attack Detection
+    # decision_tree_attack = DecisionTreeClassifier(max_depth=15)
+    # decision_tree_attack.fit(X_attack_train, y_attack_train)
+    # save_model(decision_tree_attack, "decision_tree_attack_type", MAIN_VERSION, SAVE_FOLDER)
+    # evaluate_classification(decision_tree_attack, "Traffic Classification Attack", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
 
     # %%
     # Deep Neural Network
@@ -186,6 +197,37 @@ def train():
     # evaluate_classification(dnn_model, "DNN Model Classification", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
     # print("Done Training Model!")
 
+    # %%
+    # PyCaret Model Evaluation
+    # df = df.sample(frac=0.5)
+    # df = clean_dataset(df)
+    # label_column = df.columns[-1]
+    # grid = setup(data=df, target=label_column, html=False, outliers_threshold=0.1)
+    # best = compare_models()
+    # print(best)
+
+    # %%
+    # Flaml
+    df = clean_dataset(df)
+    # Get a dataframe where there are no Benign Entries so only attack types
+    df = df.copy()[df[df.columns[-1]] != "BENIGN"]
+    X, y = df.drop(df.columns[-1], axis=1).to_numpy(), df[[df.columns[-1]]].to_numpy()
+    # Split into training and test attack
+    X_attack_train, X_attack_test, y_attack_train, y_attack_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+
+    flaml_automl = AutoML()
+    print(X_attack_train.shape[0])
+    print(y_attack_train.shape[0])
+    print(X_attack_train.shape)
+    print(y_attack_train.shape)
+    flaml_automl.fit(X_attack_train, y_attack_train, task="classification", time_budget=100)
+    save_model(flaml_automl, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
+
+    print(flaml_automl.best_config)
+    evaluate_classification(flaml_automl, "Traffic Classification Attack", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
+
+
 if __name__ == "__main__":
     train()
+    # create_test_data()
 

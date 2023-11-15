@@ -19,7 +19,7 @@ def load_model(file_path):
     return joblib.load(file_path)
 
 # %%
-def get_datasets_from_directory(directory_path):
+def get_datasets_from_directory(directory_path) -> pd.DataFrame:
     # Check if the given path is a directory
     if not os.path.isdir(directory_path):
         raise ValueError("Provided path is not a directory.")
@@ -60,7 +60,7 @@ def get_datasets_from_directory(directory_path):
     return concatenated_df
 
 # %%
-def get_dataset_from_directories(directories):
+def get_dataset_from_directories(directories) -> pd.DataFrame:
     if type(directories) == list:
         dataframes = []
         for directory in directories:
