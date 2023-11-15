@@ -18,7 +18,7 @@ SAVE_FOLDER = "./saved_models"
 
 
 # %%
-def clean_dataset(df):
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
     df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
     df.dropna(inplace=True)
@@ -170,7 +170,7 @@ def train():
     # This one is really good for Benign and not Benign
     decision_tree = DecisionTreeClassifier(max_depth=13)
     decision_tree.fit(X_train, y_train)
-    save_model(decision_tree, "decision_tree_suspicious", MAIN_VERSION, SAVE_FOLDER)
+    save_model(decision_tree, "decision_tree_anomaly", MAIN_VERSION, SAVE_FOLDER)
     evaluate_classification(decision_tree, "Traffic Classification", X_train, X_test, y_train, y_test)
 
     # This one is good for attack classification
