@@ -1,0 +1,1 @@
+pyinstaller --additional-hooks-dir="./hooks/" --collect-all "xgboost" --add-data "./saved_models/onehotencoder_attack_v1.1_2023-11-11.pkl:./saved_models/" --add-data "./saved_models/flaml_attack_type_v1.1_2023-11-11.pkl:./saved_models/" --add-data "./saved_models/decision_tree_anomaly_v1.3_2023-11-11.pkl:./saved_models/" --onefile main.py
