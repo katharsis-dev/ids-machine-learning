@@ -1,9 +1,9 @@
 <!-- PROJECT LOGO -->
-# COMP-4983 Insurance Claim Prediction
+# Traffic Anomaly and Classification
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Goal of this project is to perform data exploration and preprocessing on unlabled data through multiple iterations to test and evaluate different models.
+The goal of this project is to capture traffic and preprocess it in hope we can identify and classify anomalies in traffic for intrusion detection purposes.
 
 ## Project Structure
 
@@ -37,19 +37,6 @@ Goal of this project is to perform data exploration and preprocessing on unlable
 ├── run.py
 ├── requirements.txt (Project Dependencies)
 └── README.md (Read me file)
-```
-
-## Submissions
-
-### Checkpoint #1 
-```
-1_1_1.csv MAE = 9086.27
-1_1_2.csv MAE = 195.72
-1_1_3.csv MAE = 168.46
-1_1_4.csv MAE = 99.93
-1_1_5.csv MAE = 291.84  # Deep neural network regression
-1_1_6.csv MAE = 117.68  # XGBoost regression
-1_1_7.csv MAE = 105.88  # RandomForestClassifier + ExtraTreesRegression
 ```
 
 <!-- GETTING STARTED -->
