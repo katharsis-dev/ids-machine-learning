@@ -1,30 +1,32 @@
+from uuid import SafeUUID
 import numpy as np
 import pandas as pd
 import argparse
 from .utils import load_model
 from .train import clean_dataset, preprocess_attack_X, preprocess_anomaly_X
+from .constants import SAVED_MODELS_MODULE
 import pkg_resources
 
 
-class IDS_Model():
+class Model():
 
     def __init__(self, anomaly_model=None, attack_model=None, attack_encoder=None) -> None:
 
         # Load anomaly model
         if anomaly_model is None:
-            self.anomaly_model = load_model(pkg_resources.resource_filename(__name__, "./saved_models/decision_tree_anomaly_v1.3_2023-11-11.pkl"))
+            self.anomaly_model = load_model(pkg_resources.resource_filename(SAVED_MODELS_MODULE, "/decision_tree_anomaly_v1.3_2023-11-11.pkl"))
         else:
             self.anomaly_model = anomaly_model
 
         # Load attack model
         if attack_model is None:
-            self.attack_model = load_model(pkg_resources.resource_filename(__name__, "./saved_models/flaml_attack_type_v1.1_2023-11-11.pkl"))
+            self.attack_model = load_model(pkg_resources.resource_filename(SAVED_MODELS_MODULE, "/flaml_attack_type_v1.1_2023-11-11.pkl"))
         else:
             self.attack_model = attack_model
 
         # Load attack encoder
         if attack_encoder is None:
-            self.attack_model = load_model(pkg_resources.resource_filename(__name__, "./saved_models/onehotencoder_attack_v1.1_2023-11-11.pkl"))
+            self.attack_model = load_model(pkg_resources.resource_filename(SAVED_MODELS_MODULE, "/onehotencoder_attack_v1.1_2023-11-11.pkl"))
         else:
             self.attack_encoder = attack_encoder
 
