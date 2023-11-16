@@ -21,7 +21,8 @@ The goal of this project is to capture traffic and preprocess it in hope we can 
 ├── tools (Data analysis tools and scripts)
 ├── requirements.txt (Project Dependencies)
 ├── README.md (Read me file)
-└── run.sh (File to run to IDS system)
+├── build.py (Build file to run before running run.py)
+└── run.py (File to run to start IDS system)
 ```
 
 <!-- GETTING STARTED -->
