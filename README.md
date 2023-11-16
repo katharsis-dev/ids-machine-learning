@@ -8,35 +8,20 @@ The goal of this project is to capture traffic and preprocess it in hope we can 
 ## Project Structure
 
 ```
-├── dataset (Dataset used)/
-│   ├── test.csv
-│   └── trainingset.csv
-├── submissions/
-│   ├── 1/
-│   │   ├── 1_1_1.csv
-│   │   ├── 1_1_2.csv
-│   │   └── ...
-│   ├── 2/
-│   │   └── ...
-│   ├── 3
-│   └── 4
-├── models (Models used for prediction)/
-│   ├── model0_template/
+├── models (Available Models)/
+│   ├── flaml_model/
+│   │   ├── flaml_model/
+│   │   │   ├── model.py (File containing the main model for package)
+│   │   │   ├── utils.py (Utility files)
+│   │   │   └── train.py (File to run when training model)
+│   │   ├── saved_models/ (Folder containing saved models)
 │   │   ├── requirements.txt
-│   │   ├── main.py
-│   │   └── utils.py
-│   ├── model1_KNN_brytton/
-│   │   ├── requirements.txt
-│   │   └── main.py
-│   ├── model2_DNN_brytton/
-│   │   ├── requirements.txt
-│   │   └── main.py
-│   └── model...
-├── build.py
-├── build_configs.py (Configurations for Building)
-├── run.py
+│   │   └── setup.py
+│   └── ...
+├── tools (Data analysis tools and scripts)
 ├── requirements.txt (Project Dependencies)
-└── README.md (Read me file)
+├── README.md (Read me file)
+└── run.sh (File to run to IDS system)
 ```
 
 <!-- GETTING STARTED -->
@@ -47,69 +32,27 @@ List of prerequisties that should be installed before hand.
 1. Have Python insatlled with pip to create virual environments.
 https://www.python.org/downloads/
 
+2. Create virtual environment with the requirements.txt file at the root level.
+
+
 ### Creating New Models
 The following steps explain how you can create and test new models.
-
-1. Create a new directory under models. Please follow the naming scheme **"model[##]_[model_type]_[your name]_[optional description]"**.
-
-2. Setup your virtual environment as desired and create a [requirements.txt](http://https://stackoverflow.com/questions/31684375/automatically-create-file-requirements-txt "requirements.txt").
-
-	**Recommended:** Create your virtual environments within your model directory so it is easy for you activate in the future and you don't get confused
-```
-python -m venv /models/model0_example/venv
-```
-
-3. Activate your newly created [virual environment]( https://python.land/virtual-environments/virtualenv "virual environment").
-```
-# Linux
-source /models/model0_example/venv/bin/activate
-
-# Windows
-/models/model0_example/venv/bin/activate
-powershell /models/model0_example/venv/bin/activate.ps1
-```
-
-4. Install pyinstaller `pip install pyinstaller` for compiling code into executable
-
-5. Copy the the /models/model0_template/main.py file as the entry point for your code. (This is so your code can be compiled into an executable later on)
-
-6. Modify predict function in the main.py file so that it fits your preprocessing and outputs a csv file in the submission format.
+.
 
 ### How To Run
-How to run main.py or executable after compiling.
+Run run.sh file at root level. (Currently only works on Linux :P)
 
-### How To Build
-
-1. Run the build.py Python script.
+### How To Load Models
+1. Go into the desired model folder and install the package into your environment.
+```
+pip install .
+```
 
 #### Usage
-```
-usage: main [-h] {predict,evaluate} -d DATASET_PATH -m MODEL_PATH [-o OUTPUT_PATH]
+Work in Progress . . .
 
-command
-	predict
-        Predict outputs based on the given dataset and model.
-	evaluate
-        Evaluate model based on the given dataset and model.
--d, --dataset
-	path to the dataset to load.
--m, --model
-	path to the model to load.
--o, --output
-	Path the output the predictions.
-
-```
 #### Examples
-```
-./dist/main predict -d ../../dataset/testset.csv -m ./saved_models/linear_model.pkl -o result.csv
-
-# result.csv
-rowIndex,ClaimAmount
-0,42.258355753841826
-1,95.63259244898056
-2,196.71112271535935
-3,126.66342615445835
-```
+Work in Progress . . .
 
 
 <!-- HOW IT WORKS -->
