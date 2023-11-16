@@ -10,14 +10,14 @@ import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import dask.dataframe as dd
 from imblearn.over_sampling import RandomOverSampler
-from .utils import save_model, get_dataset_from_directories, evaluate_classification
+from utils import save_model, get_dataset_from_directories, evaluate_classification
 from pycaret.classification import setup
 from pycaret.classification import compare_models
 from flaml import AutoML
 
 
 MAIN_VERSION = 1
-SAVE_FOLDER = "./saved_models"
+SAVE_FOLDER = "../saved_models/"
 
 
 # %%
@@ -107,7 +107,7 @@ def preprocess_attack_y(df_y):
     attack_labels = df_y[df_y.columns[0]].values.reshape(-1, 1)
     attack_labels = onehotencoder_attack.fit_transform(attack_labels).toarray()
     # print(attack_labels, attack_labels.shape)
-    save_model(onehotencoder_attack, "onehotencoder_attack", MAIN_VERSION, SAVE_FOLDER)
+    # save_model(onehotencoder_attack, "onehotencoder_attack", MAIN_VERSION, SAVE_FOLDER)
     return attack_labels
 
 
@@ -146,10 +146,12 @@ def create_test_data():
 
 def train():
     # %%
-    df = get_dataset_from_directories(["../../datasets/CIC-IDS-2017/MachineLearningCVE/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/"])
     # df = get_dataset_from_directories(["../datasets/CSE-CIC-IDS2018/"])
     # df = get_dataset_from_directories(["../datasets/CIC-IDS-2017/TrafficLabelling/", "../datasets/CIC-IDS-2017/MachineLearningCVE/"])
     # df = pd.read_csv("../datasets/CIC-IDS-2017/TrafficLabelling/Monday-WorkingHours.pcap_ISCX.csv")
+    print(df[df.columns[-1]].value_counts())
+    exit()
 
     anomaly_data, attack_data = preprocess(df)
 
@@ -216,12 +218,8 @@ def train():
     X_attack_train, X_attack_test, y_attack_train, y_attack_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
 
     flaml_automl = AutoML()
-    print(X_attack_train.shape[0])
-    print(y_attack_train.shape[0])
-    print(X_attack_train.shape)
-    print(y_attack_train.shape)
     flaml_automl.fit(X_attack_train, y_attack_train, task="classification", time_budget=100)
-    save_model(flaml_automl, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
+    # save_model(flaml_automl, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
 
     print(flaml_automl.best_config)
     evaluate_classification(flaml_automl, "Traffic Classification Attack", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
