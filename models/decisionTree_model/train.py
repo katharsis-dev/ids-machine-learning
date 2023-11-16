@@ -10,7 +10,7 @@ import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import dask.dataframe as dd
 from imblearn.over_sampling import RandomOverSampler
-from utils import save_model, get_dataset_from_directories, evaluate_classification
+from .utils import save_model, get_dataset_from_directories, evaluate_classification
 from pycaret.classification import setup
 from pycaret.classification import compare_models
 from flaml import AutoML

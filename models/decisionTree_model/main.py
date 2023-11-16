@@ -1,21 +1,37 @@
-import sklearn
-import xgboost
 import numpy as np
 import pandas as pd
 import argparse
-from utils import load_model
-from train import clean_dataset, preprocess_attack_X, preprocess_anomaly_X
+from .utils import load_model
+from .train import clean_dataset, preprocess_attack_X, preprocess_anomaly_X
+import pkg_resources
 
 
-class DecisionTreeModel():
+class IDS_Model():
 
-    def __init__(self, anomaly_model, attack_model, attack_encoder) -> None:
-        self.anomaly_model = anomaly_model
-        self.attack_model = attack_model
-        self.attack_encoder = attack_encoder
+    def __init__(self, anomaly_model=None, attack_model=None, attack_encoder=None) -> None:
+
+        # Load anomaly model
+        if anomaly_model is None:
+            self.anomaly_model = load_model(pkg_resources.resource_filename(__name__, "./saved_models/decision_tree_anomaly_v1.3_2023-11-11.pkl"))
+        else:
+            self.anomaly_model = anomaly_model
+
+        # Load attack model
+        if attack_model is None:
+            self.attack_model = load_model(pkg_resources.resource_filename(__name__, "./saved_models/flaml_attack_type_v1.1_2023-11-11.pkl"))
+        else:
+            self.attack_model = attack_model
+
+        # Load attack encoder
+        if attack_encoder is None:
+            self.attack_model = load_model(pkg_resources.resource_filename(__name__, "./saved_models/onehotencoder_attack_v1.1_2023-11-11.pkl"))
+        else:
+            self.attack_encoder = attack_encoder
+
 
         self.ANOMALY_COLUMN = "anomaly"
         self.ATTACK_COLUMN = "attack_type"
+
     
     def preprocess_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -62,10 +78,7 @@ if __name__ == "__main__":
     input_file_path = args.input_file
     output_file_path = args.output_file
 
-    anomaly_model = load_model("./saved_models/decision_tree_anomaly_v1.3_2023-11-11.pkl")
-    attack_model = load_model("./saved_models/flaml_attack_type_v1.1_2023-11-11.pkl")
-    attack_onehotencoder = load_model("./saved_models/onehotencoder_attack_v1.1_2023-11-11.pkl")
-    model = DecisionTreeModel(anomaly_model, attack_model, attack_onehotencoder)
+    model = IDS_Model()
 
     # df = pd.read_csv("../../datasets/test.csv")
     df = pd.read_csv(input_file_path)
