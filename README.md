@@ -53,7 +53,7 @@ The following steps explain you can train models that exist inside the model dir
 
 ## How To Run
 ### Building Virtual Environment
-Run run.sh file at root level. (Currently only works on Linux :P)
+Run run.sh file at root level.
 
 Note: You can only have one model active at once given that each model uses a different virtual environment.
 
