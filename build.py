@@ -31,6 +31,7 @@ def install_requirements(folder_path):
     print(f"Missing requirements.txt file in {folder_path}")
     return False
 
+
 def install_package(folder_path):
     # Navigate to the project directory
     # os.chdir(folder_path)
@@ -49,6 +50,13 @@ def install_package(folder_path):
         return True
     print(f"Missing setup.py file.")
 
+
+def install_cic_flow_meter(folder_path):
+    # Activate the virtual environment
+    activate_script = os.path.join(folder_path, 'venv', 'Scripts' if os.name == 'nt' else 'bin', 'activate')
+
+    cicflowmeter_github = "https://github.com/katharsis-dev/CICFlowMeter.git"
+    subprocess.run(f". {activate_script}; cd {folder_path}; cd ../../tools; git clone {cicflowmeter_github} cicflowmeter; cd cicflowmeter; pip install .", shell=True)
 
 
 def select_model(models_dir) -> str:
@@ -78,6 +86,7 @@ def build_environment(model_package_path):
     install_requirements(model_package_path)
 
     install_package(model_package_path)
+    install_cic_flow_meter(model_package_path)
 
 def update_run_script(model_name):
     import_package_command = f"from {model_name}.model import Model"

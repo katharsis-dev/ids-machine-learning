@@ -2,6 +2,8 @@
 IMPORT_PACKAGE
 test.py
 datasets/
+temp/
+cicflowmeter/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
