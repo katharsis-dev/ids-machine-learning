@@ -8,11 +8,11 @@ import pkg_resources
 
 class Model():
 
-    def __init__(self, anomaly_model=None, attack_model=None, attack_encoder=None) -> None:
+    def __init__(self, anomaly_model=None, attack_model=None) -> None:
 
         # Load anomaly model
         if anomaly_model is None:
-            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/decision_tree_anomaly_v1.3_2023-11-11.pkl"))
+            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/decision_tree_anomaly_v1.1_2023-11-11.pkl"))
 
         else:
             self.anomaly_model = anomaly_model
@@ -22,12 +22,6 @@ class Model():
             self.attack_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_attack_type_v1.1_2023-11-11.pkl"))
         else:
             self.attack_model = attack_model
-
-        # Load attack encoder
-        if attack_encoder is None:
-            self.attack_encoder = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/onehotencoder_attack_v1.1_2023-11-11.pkl"))
-        else:
-            self.attack_encoder = attack_encoder
 
 
         self.ANOMALY_COLUMN = "anomaly"
@@ -79,7 +73,7 @@ if __name__ == "__main__":
     input_file_path = args.input_file
     output_file_path = args.output_file
 
-    model = IDS_Model()
+    model = Model()
 
     # df = pd.read_csv("../../datasets/test.csv")
     df = pd.read_csv(input_file_path)

@@ -7,7 +7,7 @@ from flaml import AutoML
 
 
 MAIN_VERSION = 1
-SAVE_FOLDER = "../saved_models/"
+SAVE_FOLDER = "./saved_models/"
 
 def preprocess(df):
     df = clean_dataset(df)
@@ -94,6 +94,6 @@ def train(save=True):
 
 
 if __name__ == "__main__":
-    train(save=False)
+    train(save=True)
     # create_test_data()
 
