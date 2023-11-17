@@ -39,7 +39,7 @@ def predict_function(file_path):
     print(result)
 
 def test_function():
-    print(f"Model was loaded successfully!")
+    print(f"Model loaded successfully, this means build was successful!")
 
 def main():
     parser = argparse.ArgumentParser(description="Monitor a folder for new CSV files.")

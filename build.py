@@ -100,8 +100,17 @@ def activate_new_environment(folder_path):
     # if activate == "y" or activate == "yes":
     #     subprocess.run(f"/bin/bash source {activate_script}", shell=True, check=True)
 
+def test_build(run_file_path, environment_path):
+    # Activate the virtual environment
+    activate_script = os.path.join(environment_path, 'venv', 'Scripts' if os.name == 'nt' else 'bin', 'activate')
+    python_location = os.path.join(environment_path, 'venv', 'Scripts' if os.name == 'nt' else 'bin', 'python')
+
+    subprocess.run(f". {activate_script}; cd {run_file_path}; python run.py --test", shell=True)
+
 
 def main():
+    original_directory = os.getcwd()
+
     # Get the current script directory
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -113,10 +122,13 @@ def main():
     model_package_path = os.path.join(models_dir, selected_model)
     
     # Build the Python Virtual Environment
-    # build_environment(model_package_path)
+    build_environment(model_package_path)
 
     # Create a file so the run.py knows what command to use to import the required package
     update_run_script(selected_model)
+
+    # Test Build Results
+    test_build(original_directory, model_package_path)
 
     # Activate environment
     activate_new_environment(model_package_path)
