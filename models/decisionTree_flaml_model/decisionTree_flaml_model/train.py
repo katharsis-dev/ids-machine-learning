@@ -37,7 +37,7 @@ def preprocess(df):
 
 
 def create_test_data():
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     df = df.drop(df.columns[-1], axis=1)
     print(df.columns)
     df.to_csv("../../../datasets/test.csv", index=False)
@@ -46,7 +46,7 @@ def create_test_data():
 
 def train(save=True):
     # %%
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     # df = get_dataset_from_directories(["../datasets/CSE-CIC-IDS2018/"])
     # df = get_dataset_from_directories(["../datasets/CIC-IDS-2017/TrafficLabelling/", "../datasets/CIC-IDS-2017/MachineLearningCVE/"])
     # df = pd.read_csv("../datasets/CIC-IDS-2017/TrafficLabelling/Monday-WorkingHours.pcap_ISCX.csv")
@@ -94,6 +94,6 @@ def train(save=True):
 
 
 if __name__ == "__main__":
-    train(save=True)
+    train(save=False)
     # create_test_data()
 

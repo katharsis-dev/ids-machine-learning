@@ -7,6 +7,9 @@ processed_columns = [' Destination Port', ' Flow Duration', ' Total Fwd Packets'
 processed_columns = [value.strip().lower().replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_") for value in processed_columns]
 processed_columns.remove("fwd_header_length.1")
 
+print(len(raw_columns))
+print(len(processed_columns))
+
 remove_columns = ["src_ip", "dst_ip", "src_port", "src_mac", "dst_mac", "timestamp", "protocol"]
 for column in remove_columns:
     raw_columns.remove(column)

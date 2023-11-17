@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import argparse
 from .utils import load_model, clean_dataset, preprocess_attack_X, preprocess_anomaly_X
-from .constants import SAVED_MODELS_MODULE
+from .constants import SAVED_MODELS_MODULE, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS
 import pkg_resources
 
 
@@ -40,11 +40,18 @@ class Model():
         Predict outputs based on the given data
         """
         df = self.preprocess_dataframe(df)
+        if len(df.columns) == COLUMN_LENGTH_FILTERED:
+            df_filtered = df
+        elif len(df.columns) == COLUMN_LENGTH_RAW:
+            original_columns_set = set(df.columns)
+            new_columns_set = list(original_columns_set - set(REMOVE_RAW_COLUMNS))
+            df_filtered = df[new_columns_set]
+        else:
+            print(f"Error - Unexpected column length {len(df.columns)}")
+            exit(1)
 
-        X_anomaly = preprocess_anomaly_X(df)
-        # X_attack = preprocess_attack_X(df)
-        # X_attack = preprocess_attack_X(df)
-        X_attack = df.to_numpy()
+        X_anomaly = preprocess_anomaly_X(df_filtered)
+        X_attack = df_filtered.to_numpy()
 
         anomaly_predictions = self.anomaly_model.predict(X_anomaly)
 

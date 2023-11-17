@@ -34,7 +34,8 @@ def process_new_csv_files(folder_path, new_files):
             convert_pcap_to_csv(pcap_file_path, csv_file_path)
             print(f"New CSV file '{csv_file_path}' has been created:")
             df = pd.read_csv(csv_file_path)
-            print(df)
+            result = model.predict(df)
+            print(result)
             print("\n")
 
 def convert_pcap_to_csv(pcap_file_path, csv_file_path):
