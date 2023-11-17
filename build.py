@@ -86,7 +86,19 @@ def update_run_script(model_name):
 
     with open(IMPORT_PACKAGE, "w") as file:
         file.write(import_package_command)
-    print(f"Run Script Updated: {import_package_command}")
+    print(f"Run Script Import Module Updated: {import_package_command}\n")
+
+def activate_new_environment(folder_path):
+    activate_script = os.path.join(folder_path, 'venv', 'Scripts' if os.name == 'nt' else 'bin', 'activate')
+
+    message_title = "New Python Environment Created"
+    print("=" * 30, message_title, "=" * 30, "\n")
+    print("Run following command to activate before runing run.py:")
+    print(f"COMMAND: source {activate_script}\n")
+    print("=" * (60 + len(message_title) + 2), "\n")
+    # activate = input("Activate newly created environment (Y/N)? ").lower()
+    # if activate == "y" or activate == "yes":
+    #     subprocess.run(f"/bin/bash source {activate_script}", shell=True, check=True)
 
 
 def main():
@@ -101,10 +113,13 @@ def main():
     model_package_path = os.path.join(models_dir, selected_model)
     
     # Build the Python Virtual Environment
-    build_environment(model_package_path)
+    # build_environment(model_package_path)
 
     # Create a file so the run.py knows what command to use to import the required package
     update_run_script(selected_model)
+
+    # Activate environment
+    activate_new_environment(model_package_path)
 
 
 if __name__ == "__main__":
