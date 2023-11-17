@@ -1,8 +1,17 @@
 import joblib
 import os
+import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_absolute_error, accuracy_score, recall_score, precision_score, confusion_matrix, f1_score, mean_squared_error, max_error
 from datetime import datetime
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.metrics import mean_absolute_error, accuracy_score, recall_score, precision_score, confusion_matrix, f1_score, mean_squared_error, max_error
+
+# %%
+def standarize_dataset(X):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    return X_scaled
 
 # %%
 def save_model(model, name, main_version, folder_path):
@@ -13,6 +22,60 @@ def save_model(model, name, main_version, folder_path):
         if not os.path.isfile(check_file):
             joblib.dump(model, check_file)
             return
+
+# %%
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
+    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
+    df = df.dropna()
+    df = df.drop_duplicates(keep="first")
+    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
+    df = df[indices_to_keep]
+    return df
+
+def preprocess_anomaly_X(df_X, n_components=30):
+    # Convert to numpy array
+    X_anomaly = df_X.to_numpy()
+
+    # Scale Data
+    X_anomaly = standarize_dataset(X_anomaly)
+
+    # PCA Feature and Dimentionality Reduction
+    pca = PCA(n_components=n_components)
+    pca = pca.fit(X_anomaly)
+    X_anomaly_reduced = pca.transform(X_anomaly)
+    return X_anomaly_reduced
+
+
+def preprocess_attack_X(df_X):
+    # Convert to numpy array
+    X_attack = df_X.to_numpy()
+
+    # Scale Data
+    X_attack = standarize_dataset(X_attack)
+    return X_attack
+
+def preprocess_anomaly_y(df_y):
+    # One Hot Encode the lable column and ten only take values that are Benign
+    onehotencoder = OneHotEncoder()
+    labels = df_y[df_y.columns[0]].values.reshape(-1, 1)
+    labels = onehotencoder.fit_transform(labels).toarray()
+    labels = np.logical_not(labels[:,0]).astype(float)
+
+    # # Replace the label column with 0 and 1
+    # df["label"] = labels 
+    # df["label"] = df["label"].astype(float)
+    return labels
+
+
+def preprocess_attack_y(df_y):
+    # One Hot Encode the label column values for different attack types
+    onehotencoder_attack = OneHotEncoder()
+    attack_labels = df_y[df_y.columns[0]].values.reshape(-1, 1)
+    attack_labels = onehotencoder_attack.fit_transform(attack_labels).toarray()
+    # print(attack_labels, attack_labels.shape)
+    # save_model(onehotencoder_attack, "onehotencoder_attack", MAIN_VERSION, SAVE_FOLDER)
+    return attack_labels
 
 
 def load_model(file_path):

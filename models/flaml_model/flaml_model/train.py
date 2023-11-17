@@ -1,16 +1,14 @@
 # %%
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import dask.dataframe as dd
 from imblearn.over_sampling import RandomOverSampler
-from utils import save_model, get_dataset_from_directories, evaluate_classification
+from utils import save_model, get_dataset_from_directories, evaluate_classification, preprocess_attack_X, preprocess_anomaly_X, preprocess_attack_y, preprocess_anomaly_y, clean_dataset, standarize_dataset
 from pycaret.classification import setup
 from pycaret.classification import compare_models
 from flaml import AutoML
@@ -18,23 +16,6 @@ from flaml import AutoML
 
 MAIN_VERSION = 1
 SAVE_FOLDER = "../saved_models/"
-
-
-# %%
-def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
-    assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
-    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
-    df = df.dropna()
-    df = df.drop_duplicates(keep="first")
-    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
-    df = df[indices_to_keep]
-    return df
-
-# %%
-def standarize_dataset(X):
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    return X_scaled
 
 # %%
 def visualize_data(df):
@@ -66,51 +47,6 @@ def get_dnn_model(input_size, output_size):
     return model
 
 
-def preprocess_anomaly_X(df_X, n_components=30):
-    # Convert to numpy array
-    X_anomaly = df_X.to_numpy()
-
-    # Scale Data
-    X_anomaly = standarize_dataset(X_anomaly)
-
-    # PCA Feature and Dimentionality Reduction
-    pca = PCA(n_components=n_components)
-    pca = pca.fit(X_anomaly)
-    X_anomaly_reduced = pca.transform(X_anomaly)
-    return X_anomaly_reduced
-
-
-def preprocess_attack_X(df_X):
-    # Convert to numpy array
-    X_attack = df_X.to_numpy()
-
-    # Scale Data
-    X_attack = standarize_dataset(X_attack)
-    return X_attack
-
-def preprocess_anomaly_y(df_y):
-    # One Hot Encode the lable column and ten only take values that are Benign
-    onehotencoder = OneHotEncoder()
-    labels = df_y[df_y.columns[0]].values.reshape(-1, 1)
-    labels = onehotencoder.fit_transform(labels).toarray()
-    labels = np.logical_not(labels[:,0]).astype(float)
-
-    # # Replace the label column with 0 and 1
-    # df["label"] = labels 
-    # df["label"] = df["label"].astype(float)
-    return labels
-
-
-def preprocess_attack_y(df_y):
-    # One Hot Encode the label column values for different attack types
-    onehotencoder_attack = OneHotEncoder()
-    attack_labels = df_y[df_y.columns[0]].values.reshape(-1, 1)
-    attack_labels = onehotencoder_attack.fit_transform(attack_labels).toarray()
-    # print(attack_labels, attack_labels.shape)
-    # save_model(onehotencoder_attack, "onehotencoder_attack", MAIN_VERSION, SAVE_FOLDER)
-    return attack_labels
-
-
 def preprocess(df):
     df = clean_dataset(df)
 
@@ -139,9 +75,10 @@ def preprocess(df):
 
 
 def create_test_data():
-    df = get_dataset_from_directories(["../../datasets/CIC-IDS-2017/MachineLearningCVE/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/"])
     df = df.drop(df.columns[-1], axis=1)
-    df.to_csv("../../datasets/test.csv", index=False)
+    print(df.columns)
+    df.to_csv("../../../datasets/test.csv", index=False)
     print("Test Dataset created")
 
 def train():
@@ -226,6 +163,6 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
-    # create_test_data()
+    # train()
+    create_test_data()
 
