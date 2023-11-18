@@ -111,10 +111,12 @@ python run.py
 #### Usage
 How to use run.py
 ```
-usage: run.py [-h] [-t [TEST]] [-p [PREDICT]] [folder_path]
+usage: run.py [-h] [-t [TEST]] [-p [PREDICT]] [-i [INTERFACE]] [folder_path]
 
 folder_path
 	path to the folder to monitor for new csv files.
+-i, --interface
+    interface to monitor for network traffic (Only required if folder_path is provided).
 -p, --predict
 	file path to the csv you want the model to do predictions on.
 -t, --test
@@ -135,8 +137,21 @@ python run.py --predict ./dataset/test.csv
 
 Monitoring a directory for new csv files. Once a new csv file is found it will automatically load it and try and predict on it.
 ```
-python run.py ./monitor_directory
+python run.py -i eth0 ./monitor_directory
 ```
+
+## How To Implement Custom Functionality
+This part explains you can implement custom functionality after the system detects suspicious network traffic. In order to create custom actions after suspicious activity is detected you will need to edit the run.py script.
+
+1. Open the run.py script.
+2. Find the "process_new_files" function
+3. After the csv file is processed by the model you can add any aditional functionality. Currently the script will only print out suspicious traffic detected.
+
+### How the run.py script works
+1. Load the model based on the selected model during build.
+2. User needs to run tcpdump comamnd provided by the run.py script within another process.
+3. Script will continously monitor the specified directory for new pcap file and then convert them to csv file for model processing.
+4. Currently model will process the csv file and print out any anomalies detected.
 
 <!-- HOW IT WORKS -->
 ## How It Works

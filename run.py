@@ -54,7 +54,7 @@ def monitor_folder(folder_path, delay=5):
     while True:
         new_files = get_new_csv_files(folder_path, last_seen_files)
         if new_files:
-            process_new_csv_files(folder_path, new_files)
+            process_new_files(folder_path, new_files)
             last_seen_files.update(new_files)
         else:
             print("No New Files")
@@ -82,7 +82,7 @@ def check_command_available(command):
         return False
 
 
-def process_new_csv_files(folder_path, new_files):
+def process_new_files(folder_path, new_files):
     """
     Edit this function to change prediction reuslt behaviour
     """
