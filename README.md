@@ -5,6 +5,7 @@
 
 The goal of this project is to capture traffic and preprocess it in hope we can identify and classify anomalies in traffic for intrusion detection purposes.
 
+
 ## Project Structure
 
 ```
@@ -97,6 +98,11 @@ Model Number: 1
 ```
 2. Once build is complete you will need to activate the newly created environment. Path to the new environment should be printed in the terminal.
 3. Now you can run the run.py script with the newly created environment to start monitoring and detecting network traffic.
+
+#### Builds that Currently Work
+✅decisionTree_flaml_model<br>
+❌flaml_model<br>
+❌example<br>
 
 Note: You can only have one model active at once given that each model uses a different virtual environment so you will have to build again to use a different model.
 
