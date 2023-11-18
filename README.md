@@ -17,27 +17,29 @@ The goal of this project is to capture traffic and preprocess it in hope we can 
 │   │   ├── saved_models/ (Folder containing saved models)
 │   │   ├── requirements.txt
 │   │   └── setup.py
+│   ├── decisionTree_flaml_model/
+│   │   ├── decisionTree_flaml_model/
+│   │   │   ├── model.py
+│   │   │   ├── utils.py
+│   │   │   └── train.py
+│   │   ├── saved_models/
+│   │   ├── requirements.txt
+│   │   └── setup.py
 │   └── ...
-├── tools (Data analysis tools and scripts)
+├── tools (Data analysis tools and scripts)/
+│   ├── data_analysis/ (Scripts for data analysis)
+│   └── data_filter/ (Scripts for formatting dataset for training)/
+│       ├── filter_cic-ids-2017.py
+│       └── filter_cic-ids-2018.py
 ├── requirements.txt (Project Dependencies)
 ├── README.md (Read me file)
 ├── constants.py (Variables used in build.py for configuration)
-├── build.py (Build file to run before running run.py)
+├── build.py (File for building project)
 └── run.py (File to run to start IDS system)
 ```
 
 <!-- GETTING STARTED -->
-## Prerequisites
-
-### Python
-List of prerequisites that should be installed before hand.
-
-1. Have Python installed with pip to create virtual environments.
-https://www.python.org/downloads/
-
-2. Create virtual environment with the requirements.txt file at the root level.
-
-### Datasets
+## Datasets
 List of datasets used:
 -   [Intrusion Detection Evaluation Dataset (CIC-IDS2017)](https://www.unb.ca/cic/datasets/ids-2017.html)
 -   [IPS/IDS dataset on AWS (CSE-CIC-IDS2018)](https://www.unb.ca/cic/datasets/ids-2018.html)
@@ -45,28 +47,56 @@ List of datasets used:
 
 (Note: You do not need to download the datasets if you are not planning to train any models)
 
+### Formatting & Filtering Dataset
+After you download the dataset run the scripts within the tools/data_filter/ folder in order to format them for training. This is only required if you want to train the models.
+
 ## How To Develop
+### Prerequisites
+#### Python
+List of prerequisites that should be installed before hand.
+
+1. Have Python installed with pip to create virtual environments.
+https://www.python.org/downloads/
+
+2. Create base virtual environment with the requirements.txt file at the root level.
+
 
 ### Creating New Models
 The following steps explain how you can create and test new models.
 
+1. Copy one of the folders within the models folder as a template (ex. /models/flaml_model).
+2. Rename the copied folder to the following format **[model type]_model**.
+3. Rename the folder within the newly created folder to match your new folder name.
+4. Edit the setup.py script to match the new folder name. This is so that pip will know what folder to use for installing the package.
+5. Edit the train.py for your specific model. Train your model by running the script and then save the models with in the saved_models folder.
+6. Edit model.py so that it loads your saved models and then also preprocesses data to fit your model input.
+7. Create a new requirements.txt for your environment which should include any new modules you have installed.
+8. Now you can run build.py to build your model.
+9. See "How To Run" to run your newly built model.
+
 ### Training Models
 The following steps explain you can train models that exist inside the model directory.
 
-## How To Run
-### Building Virtual Environment
-How to build project.
+1. To train models run the train.py script for that specific model located with in the models folder.
+2. Make sure you have setup an environment with all the required dependencies to run the train.py script.
+3. Models should be saved within the saved_models folder and you will need to update the model.py script to load the new models instaed.
 
-1. Run the build.py script and input the desired model option.
+## How To Run
+How to run the the intrusion detection system on your computer.
+
+### Building
+1. Build the project by running the build.py script and select the desired model. Make sure you have python installed.
 ```
 python build.py
 
 Select one of the following models to build:
 1. flaml_model
+2. example
 
 Model Number: 1
 ```
-2. After build is activate the newly created environment.
+2. Once build is complete you will need to activate the newly created environment. Path to the new environment should be printed in the terminal.
+3. Now you can run the run.py script with the newly created environment to start monitoring and detecting network traffic.
 
 Note: You can only have one model active at once given that each model uses a different virtual environment so you will have to build again to use a different model.
 
