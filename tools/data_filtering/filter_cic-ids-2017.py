@@ -106,8 +106,9 @@ def process_csv(file_path, output_directory):
     df.columns = [FILTERED_TO_RAW[column_name] if column_name != "label" else column_name for column_name in df.columns]
     df = df.dropna()
     df = df.drop_duplicates(keep="first")
-    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
-    df = df[indices_to_keep]
+
+    df = df[~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)]
+
     df.to_csv(filtered_file_name, index=False)
 
 

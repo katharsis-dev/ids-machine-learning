@@ -10,6 +10,10 @@ SAVE_FOLDER = "./saved_models/"
 def preprocess(df, save=False):
     df = clean_dataset(df)
 
+    print(df["label"].value_counts())
+
+    df["label"] = df["label"].apply(lambda x: 0 if x == "BENIGN" else 1)
+
     X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]]
 
     X = standarize_data(X, save=True)
@@ -35,7 +39,8 @@ def create_test_data():
 
 def train(save=True):
     # %%
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
     # df = get_dataset_from_directories(["../datasets/CSE-CIC-IDS2018/"])
     # df = get_dataset_from_directories(["../datasets/CIC-IDS-2017/TrafficLabelling/", "../datasets/CIC-IDS-2017/MachineLearningCVE/"])
     # df = pd.read_csv("../datasets/CIC-IDS-2017/TrafficLabelling/Monday-WorkingHours.pcap_ISCX.csv")
@@ -45,10 +50,10 @@ def train(save=True):
     # %%
     # Flaml
     flaml_automl = AutoML()
-    flaml_automl.fit(X_train, y_train, task="classification", time_budget=1000)
+    flaml_automl.fit(X_train, y_train, task="classification", time_budget=2000)
 
     if save:
-        save_model(flaml_automl, "flaml", MAIN_VERSION, SAVE_FOLDER)
+        save_model(flaml_automl, "flaml_classification", MAIN_VERSION, SAVE_FOLDER)
 
     print(flaml_automl.best_config)
     evaluate_classification(flaml_automl, "Traffic Classification Attack", X_train, X_test, y_train, y_test)

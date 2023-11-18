@@ -98,7 +98,7 @@ def get_datasets_from_directory(directory_path) -> pd.DataFrame:
             if not all(col in df.columns for col in common_columns):
                 raise ValueError("Column names in CSV files are not consistent.")
 
-        concatenated_df = pd.concat([concatenated_df, df], ignore_index=True)
+        concatenated_df = pd.concat([concatenated_df, df], ignore_index=True, verify_integrity=True)
         # break
 
     return concatenated_df
