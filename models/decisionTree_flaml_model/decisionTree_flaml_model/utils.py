@@ -32,16 +32,21 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     df = df[indices_to_keep]
     return df
 
-def preprocess_anomaly_X(df_X, n_components=30):
+def preprocess_anomaly_X(df_X, n_components=30, pca=None, save=False):
     # Convert to numpy array
     X_anomaly = df_X.to_numpy()
 
     # Scale Data
     X_anomaly = standarize_dataset(X_anomaly)
 
-    # PCA Feature and Dimentionality Reduction
-    pca = PCA(n_components=n_components)
-    pca = pca.fit(X_anomaly)
+    if not pca:
+        # PCA Feature and Dimentionality Reduction
+        pca = PCA(n_components=n_components)
+        pca = pca.fit(X_anomaly)
+
+        if save:
+            save_model(pca, "PCA", 1, "saved_models")
+
     X_anomaly_reduced = pca.transform(X_anomaly)
     return X_anomaly_reduced
 

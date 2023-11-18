@@ -93,10 +93,24 @@ def process_new_csv_files(folder_path, new_files):
             convert_pcap_to_csv(pcap_file_path, csv_file_path)
             print(f"New CSV file '{csv_file_path}' has been created:")
 
-            df = pd.read_csv(csv_file_path)
+            try:
+                df = pd.read_csv(csv_file_path)
+            except pd.errors.EmptyDataError:
+                continue
+
             result_df = model.predict(df)
 
-            columns_to_print = ["timestamp", "protocol", "src_ip", "src_port", "src_mac", "dst_ip", "dst_port", "dst_mac", "attack_type"]
+            columns_to_print = [
+                                "timestamp", 
+                                "protocol", 
+                                "src_mac", 
+                                "dst_mac", 
+                                "src_ip", 
+                                "src_port", 
+                                "dst_ip", 
+                                "dst_port", 
+                                "attack_type"
+                                ]
 
             result_df = result_df[columns_to_print]
 
@@ -145,16 +159,18 @@ def main():
         # tcpdump_command = f"sudo tcpdump -i {network_interface} -n -w {os.path.join(folder_path, 'capture_$(date +%Y%m%d%H%M%S).pcap')} -G 5"
         out_file = os.path.join(folder_path, "outfile-%s.pcap")
         tcpdump_command = f"sudo tcpdump -i {network_interface} -w {out_file} -G 15 -n"
-
+        print("Run the following command in another terminal:")
+        print("\t", tcpdump_command)
         # tcpdump_process = subprocess.Popen(tcpdump_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(f"tcpdump process started successfully")
+        # print(f"tcpdump process started successfully")
         time.sleep(5)
         monitor_folder(folder_path, delay=5)
 
     except KeyboardInterrupt:
         print("Monitoring stopped.")
     finally:
-        tcpdump_process.terminate()
+        pass
+        # tcpdump_process.terminate()
 
 if __name__ == "__main__":
     main()

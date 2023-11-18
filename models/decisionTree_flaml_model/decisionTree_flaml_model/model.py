@@ -8,7 +8,7 @@ import pkg_resources
 
 class Model():
 
-    def __init__(self, anomaly_model=None, attack_model=None) -> None:
+    def __init__(self, anomaly_model=None, attack_model=None, pca=None) -> None:
 
         # Load anomaly model
         if anomaly_model is None:
@@ -22,6 +22,12 @@ class Model():
             self.attack_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_attack_type_v1.1_2023-11-11.pkl"))
         else:
             self.attack_model = attack_model
+
+        # Load PCA
+        if pca is None:
+            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.2_2023-11-11.pkl"))
+        else:
+            self.pca = pca
 
 
         self.ANOMALY_COLUMN = "anomaly"
@@ -50,7 +56,7 @@ class Model():
             print(f"Error - Unexpected column length {len(df.columns)}")
             exit(1)
 
-        X_anomaly = preprocess_anomaly_X(df_filtered)
+        X_anomaly = preprocess_anomaly_X(df_filtered, pca=self.pca)
         X_attack = df_filtered.to_numpy()
 
         anomaly_predictions = self.anomaly_model.predict(X_anomaly)

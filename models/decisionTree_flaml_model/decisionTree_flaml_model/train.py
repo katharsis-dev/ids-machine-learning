@@ -9,14 +9,14 @@ from flaml import AutoML
 MAIN_VERSION = 1
 SAVE_FOLDER = "./saved_models/"
 
-def preprocess(df):
+def preprocess(df, save=False):
     df = clean_dataset(df)
 
     # Get a dataframe where there are no Benign Entries so only attack types
     df_attack = df.copy()[df[df.columns[-1]] != "BENIGN"]
 
     # Split X and y
-    X, y = preprocess_anomaly_X(df.drop(df.columns[-1], axis=1)), preprocess_anomaly_y(df[[df.columns[-1]]])
+    X, y = preprocess_anomaly_X(df.drop(df.columns[-1], axis=1), save=save), preprocess_anomaly_y(df[[df.columns[-1]]])
 
     # Split X and y attack
     X_attack, y_attack = preprocess_attack_X(df_attack.drop(df.columns[-1], axis=1)), preprocess_attack_y(df_attack[[df_attack.columns[-1]]])
