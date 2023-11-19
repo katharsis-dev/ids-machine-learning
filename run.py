@@ -10,6 +10,8 @@ from constants import IMPORT_PACKAGE
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
+
+BENIGN_LABEL = "benign"
 # Dynamic Import for loaded model
 try:
     file = open(IMPORT_PACKAGE, "r")
@@ -114,7 +116,7 @@ def process_new_files(folder_path, new_files):
 
             result_df = result_df[columns_to_print]
 
-            suspicious_df = result_df[result_df["attack_type"] != "BENIGN"]
+            suspicious_df = result_df[result_df["attack_type"] != BENIGN_LABEL]
             if len(suspicious_df) != 0:
                 print(suspicious_df)
                 print("\n")

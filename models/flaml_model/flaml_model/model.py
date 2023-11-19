@@ -16,7 +16,7 @@ class Model():
 
         # Load anomaly model
         if anomaly_model is None:
-            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_classification_v1.3_2023-11-11.pkl"))
+            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_classification_v1.1_2023-11-11.pkl"))
 
         else:
             self.anomaly_model = anomaly_model
