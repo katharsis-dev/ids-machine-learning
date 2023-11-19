@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import argparse
 from .utils import load_model, clean_dataset, preprocess_attack_X, preprocess_anomaly_X
-from .constants import SAVED_MODELS_MODULE, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS
+from .constants import SAVED_MODELS_MODULE, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS, BENIGN_LABELS
 import pkg_resources
 
 

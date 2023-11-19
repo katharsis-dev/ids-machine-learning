@@ -9,6 +9,7 @@ from sklearn.metrics import mean_absolute_error, accuracy_score, recall_score, p
 
 
 SAVE_FOLDER = "saved_models"
+BENIGN_LABELS = ["BENIGN", "Benign", "benign"]
 # %%
 def standarize_data(X, scaler=None, save=False):
     if not scaler:
