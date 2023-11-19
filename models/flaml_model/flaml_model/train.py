@@ -9,8 +9,8 @@ MAIN_VERSION = 1
 SAVE_FOLDER = "./saved_models/"
 
 def preprocess(df, save=False):
-    print(df["label"].value_counts())
-    df["label"] = df["label"].apply(lambda x: 0 if x.lower() != BENIGN_LABEL else 1)
+    df["label"] = df["label"].apply(lambda x: x.lower())
+    df["label"] = df["label"].apply(lambda x: 0 if x == BENIGN_LABEL else 1)
     print(df["label"].value_counts())
 
     X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]]
@@ -58,7 +58,7 @@ def create_test_data():
 
 
 def train(save=True):
-    time_budget = 2000
+    time_budget = 500
     # %%
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
@@ -79,15 +79,15 @@ def train(save=True):
     evaluate_classification(flaml_classification, "Traffic Classification Attack", X_train, X_test, y_train, y_test)
 
     # Classifying different attack types
-    # X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_attack_types(df.copy())
-    # flaml_attack_classification = AutoML()
-    # flaml_attack_classification.fit(X_attack_train, y_attack_train, task="classification", time_budget=time_budget)
-    #
-    # if save:
-    #     save_model(flaml_attack_classification, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
-    #
-    # print(flaml_attack_classification.best_config)
-    # evaluate_classification(flaml_attack_classification, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
+    X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_attack_types(df.copy())
+    flaml_attack_classification = AutoML()
+    flaml_attack_classification.fit(X_attack_train, y_attack_train, task="classification", time_budget=time_budget)
+
+    if save:
+        save_model(flaml_attack_classification, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
+
+    print(flaml_attack_classification.best_config)
+    evaluate_classification(flaml_attack_classification, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
 
     # print(flaml_classification.predict(X_train[:10]))
     # print(flaml_attack_classification.predict(X_attack_train[:10]))

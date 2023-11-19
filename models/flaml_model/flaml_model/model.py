@@ -1,18 +1,22 @@
 import numpy as np
 import pandas as pd
 import argparse
-from .utils import load_model, clean_dataset, preprocess_attack_X, preprocess_anomaly_X
-from .constants import SAVED_MODELS_MODULE, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS, BENIGN_LABELS
+from .utils import load_model, clean_dataset
+from .constants import SAVED_MODELS_MODULE, BENIGN_LABEL, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 import pkg_resources
 
 
 class Model():
+    scaler: StandardScaler
+    pca: PCA
 
-    def __init__(self, anomaly_model=None, attack_model=None, pca=None) -> None:
+    def __init__(self, anomaly_model=None, attack_model=None, pca=None, scaler=None) -> None:
 
         # Load anomaly model
         if anomaly_model is None:
-            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/decision_tree_anomaly_v1.1_2023-11-11.pkl"))
+            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_classification_v1.3_2023-11-11.pkl"))
 
         else:
             self.anomaly_model = anomaly_model
@@ -23,9 +27,15 @@ class Model():
         else:
             self.attack_model = attack_model
 
+        # Load Scaler
+        if scaler is None:
+            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.1_2023-11-11.pkl"))
+        else:
+            self.scaler = scaler
+
         # Load PCA
         if pca is None:
-            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.2_2023-11-11.pkl"))
+            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.1_2023-11-11.pkl"))
         else:
             self.pca = pca
 
@@ -34,47 +44,47 @@ class Model():
         self.ATTACK_COLUMN = "attack_type"
 
     
-    def preprocess_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+    def preprocess_dataframe(self, df: pd.DataFrame):
         """
         Clean up the dataframe before passing into model for predictions
         """
-        return clean_dataset(df)
+        X = df.to_numpy()
+        X = self.scaler.transform(X)
+        X = self.pca.transform(X)
+        return X
 
 
     def predict(self, df: pd.DataFrame):
         """
         Predict outputs based on the given data
         """
-        df = self.preprocess_dataframe(df)
+        df = clean_dataset(df)
         if len(df.columns) == COLUMN_LENGTH_FILTERED:
             df_filtered = df
-        elif len(df.columns) == COLUMN_LENGTH_RAW:
+        # else len(df.columns) == COLUMN_LENGTH_RAW:
+        else:
             original_columns_set = set(df.columns)
             new_columns_set = list(original_columns_set - set(REMOVE_RAW_COLUMNS))
             df_filtered = df[new_columns_set]
-        else:
-            print(f"Error - Unexpected column length {len(df.columns)}")
-            exit(1)
 
-        X_anomaly = preprocess_anomaly_X(df_filtered, pca=self.pca)
-        X_attack = df_filtered.to_numpy()
+        X = self.preprocess_dataframe(df_filtered)
 
-        anomaly_predictions = self.anomaly_model.predict(X_anomaly)
+        anomaly_predictions = self.anomaly_model.predict(X)
 
         df[self.ANOMALY_COLUMN] = anomaly_predictions
 
         attack_predictions = []
         for i in range(len(df)):
             anomaly_prediction = anomaly_predictions[i]
-            attack_prediction = "BENIGN"
+            attack_prediction = BENIGN_LABEL
             if anomaly_prediction == 1:
-                attack_prediction = self.attack_model.predict(np.array([X_attack[i]]))
+                attack_prediction = self.attack_model.predict(np.array([X[i]]))
                 attack_prediction = attack_prediction[0]
 
             attack_predictions.append(attack_prediction)
 
         df[self.ATTACK_COLUMN] = attack_predictions
-        # print(df[self.ATTACK_COLUMN].value_counts())
+        print(df[self.ATTACK_COLUMN].value_counts())
         return df
 
 
