@@ -56,6 +56,19 @@ def load_model(file_path):
 # %%
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
+    # Make all label values lowercase
+    if ("label" in list(df.columns)):
+        df["label"] = df["label"].apply(lambda x: x.lower())
+        # Sort columns alphabetically but ignore the label column
+        columns_to_sort = list(df.columns[:-1])
+        columns_to_sort.sort()
+        columns_to_sort.append(df.columns[-1])
+        df = df[columns_to_sort]
+    else:
+        columns_to_sort = list(df.columns)
+        columns_to_sort.sort()
+        df = df[columns_to_sort]
+
     df = df.dropna()
     df = df.drop_duplicates(keep="first")
     indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
@@ -115,27 +128,21 @@ def get_dataset_from_directories(directories) -> pd.DataFrame:
         return get_datasets_from_directory(directories)
 
 
-# def evaluate_classification(model, name, X, y):
-#     train_predictions = model.predict(X)
-#
-#
-#     accuracy = accuracy_score(y, train_predictions)
-#     
-#     precision = precision_score(y, train_predictions)
-#     
-#     recall = recall_score(y, train_predictions)
-#
-#     f1 = f1_score(y, train_predictions)
-#
-#     print("=" * 15, name, "=" * 15)
-#     print(f"Accuracy:      {round(accuracy * 100, 2):>15}")
-#     print(f"Precision:    {round(precision * 100, 2):>15}")
-#     print(f"Recall:       {round(recall * 100, 2):>15}")
-#     print(f"F1 Score:     {round(f1 * 100, 2):>15}")
-#     
-#     confusion_matrix_result = confusion_matrix(y, train_predictions)
-#     print(confusion_matrix_result)
-#     print("=" * (30 + len(name) + 2), "\n")
+def evaluate_classification_single(y_label, y_pred, name="Evaluation"):
+
+    accuracy = accuracy_score(y_label, y_pred)
+    
+    precision = precision_score(y_label, y_pred, average="macro")
+    
+    recall = recall_score(y_label, y_pred, average="macro")
+
+    f1 = f1_score(y_label, y_pred, average="macro")
+
+    print("=" * 15, name, "=" * 15)
+    print(f"Accuracy:      {round(accuracy * 100, 2):>15}")
+    print(f"Precision:    {round(precision * 100, 2):>15}")
+    print(f"Recall:       {round(recall * 100, 2):>15}")
+    print(f"F1 Score:     {round(f1 * 100, 2):>15}")
 
 # %%
 def evaluate_classification(model, name, X_train, X_test, y_train, y_test):

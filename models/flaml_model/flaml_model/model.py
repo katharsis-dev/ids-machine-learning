@@ -16,14 +16,14 @@ class Model():
 
         # Load anomaly model
         if anomaly_model is None:
-            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_classification_v1.1_2023-11-11.pkl"))
+            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_classification_v1.3_2023-11-11.pkl"))
 
         else:
             self.anomaly_model = anomaly_model
 
         # Load attack model
         if attack_model is None:
-            self.attack_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_attack_type_v1.1_2023-11-11.pkl"))
+            self.attack_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_attack_type_v1.2_2023-11-11.pkl"))
         else:
             self.attack_model = attack_model
 
@@ -48,8 +48,7 @@ class Model():
         """
         Clean up the dataframe before passing into model for predictions
         """
-        X = df.to_numpy()
-        X = self.scaler.transform(X)
+        X = self.scaler.transform(df)
         X = self.pca.transform(X)
         return X
 
@@ -59,12 +58,14 @@ class Model():
         Predict outputs based on the given data
         """
         df = clean_dataset(df)
+
         if len(df.columns) == COLUMN_LENGTH_FILTERED:
             df_filtered = df
         # else len(df.columns) == COLUMN_LENGTH_RAW:
         else:
             original_columns_set = set(df.columns)
             new_columns_set = list(original_columns_set - set(REMOVE_RAW_COLUMNS))
+            new_columns_set.sort()
             df_filtered = df[new_columns_set]
 
         X = self.preprocess_dataframe(df_filtered)
