@@ -37,7 +37,7 @@ def preprocess_full(df, save=False):
     print(df["label"].value_counts())
 
     # Set the percentage of rows to remove
-    percentage_to_remove = 0.6  # Adjust this based on your requirement
+    percentage_to_remove = 0.7  # Adjust this based on your requirement
     # Identify rows where 'Column2' is equal to 'benign'
     rows_to_remove = df[df[df.columns[-1]] == 'benign'].sample(frac=percentage_to_remove).index
     # Drop the identified rows
@@ -143,21 +143,47 @@ def train(save=True):
     df = clean_dataset(df)
     print(df.columns)
 
-    # Full Classification
-    X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_full(df.copy(), save=save)
-    flaml_full = AutoML()
-    flaml_full.fit(X_attack_train, y_attack_train, task="classification", time_budget=time_budget)
+    # Flaml Classifying between benign and not
+    X_train, X_test, y_train, y_test = preprocess(df.copy(), save=save)
+    flaml_classification = AutoML()
+    flaml_classification.fit(X_train, y_train, task="classification", time_budget=time_budget)
 
     if save:
-        save_model(flaml_full, "flaml_full", MAIN_VERSION, SAVE_FOLDER)
+        save_model(flaml_classification, "flaml_classification", MAIN_VERSION, SAVE_FOLDER)
 
-    print(flaml_full.best_config)
-    evaluate_classification(flaml_full, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
+    print(flaml_classification.best_config)
+    evaluate_classification(flaml_classification, "Traffic Classification Attack", X_train, X_test, y_train, y_test)
 
-    print(flaml_full.predict(X_attack_test[:10]))
+    # Classifying different attack types
+    X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_attack_types(df.copy(), save=save)
+    flaml_attack_classification = AutoML()
+    flaml_attack_classification.fit(X_attack_train, y_attack_train, task="classification", time_budget=time_budget)
+
+    if save:
+        save_model(flaml_attack_classification, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
+
+    print(flaml_attack_classification.best_config)
+    evaluate_classification(flaml_attack_classification, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
+
+    print(flaml_classification.predict(X_train[:10]))
+    print(flaml_attack_classification.predict(X_attack_train[:10]))
+
+    # Full Classification
+    # X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_full(df.copy(), save=save)
+    # flaml_full = AutoML()
+    # flaml_full.fit(X_attack_train, y_attack_train, task="classification", time_budget=time_budget)
+    #
+    # if save:
+    #     save_model(flaml_full, "flaml_full", MAIN_VERSION, SAVE_FOLDER)
+    #
+    # print(flaml_full.best_config)
+    # evaluate_classification(flaml_full, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
+    #
+    # print(flaml_full.predict(X_train[:10]))
+    # print(flaml_full.predict(X_attack_train[:10]))
 
 if __name__ == "__main__":
-    train(save=True)
+    train(save=False)
     # create_test_data()
     # test_models()
 

@@ -12,13 +12,20 @@ class Model():
     scaler: StandardScaler
     pca: PCA
 
-    def __init__(self, model, pca=None, scaler=None) -> None:
+    def __init__(self, anomaly_model=None, attack_model=None, pca=None, scaler=None) -> None:
+
+        # Load anomaly model
+        if anomaly_model is None:
+            self.anomaly_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_classification_v1.3_2023-11-11.pkl"))
+
+        else:
+            self.anomaly_model = anomaly_model
 
         # Load attack model
-        if model is None:
-            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_full_v1.1_2023-11-11.pkl"))
+        if attack_model is None:
+            self.attack_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_attack_type_v1.2_2023-11-11.pkl"))
         else:
-            self.model = model
+            self.attack_model = attack_model
 
         # Load Scaler
         if scaler is None:
@@ -63,9 +70,22 @@ class Model():
 
         X = self.preprocess_dataframe(df_filtered)
 
-        predictions = self.model.predict(X)
-        df[self.ANOMALY_COLUMN] = predictions
-        print(df[self.ANOMALY_COLUMN].value_counts())
+        anomaly_predictions = self.anomaly_model.predict(X)
+
+        df[self.ANOMALY_COLUMN] = anomaly_predictions
+
+        attack_predictions = []
+        for i in range(len(df)):
+            anomaly_prediction = anomaly_predictions[i]
+            attack_prediction = BENIGN_LABEL
+            if anomaly_prediction == 1:
+                attack_prediction = self.attack_model.predict(np.array([X[i]]))
+                attack_prediction = attack_prediction[0]
+
+            attack_predictions.append(attack_prediction)
+
+        df[self.ATTACK_COLUMN] = attack_predictions
+        print(df[self.ATTACK_COLUMN].value_counts())
         return df
 
 
