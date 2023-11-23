@@ -24,13 +24,14 @@ def preprocess(df, save=False):
 
     df["label"] = df["label"].apply(lambda x: 0 if x == BENIGN_LABEL else 1)
     print(df["label"].value_counts())
+    print(df.columns)
 
     X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]]
 
     X = standarize_data(X, save=save)
 
 
-    X = feature_selection(X, y, n_features_to_select=20)
+    X = feature_selection(X, y, n_features_to_select=30)
     print(X.head())
 
     X = pca_data(X, n_components=30, save=save)
@@ -48,13 +49,19 @@ def preprocess(df, save=False):
 
     return X_train, X_test, y_train, y_test
 
-def feature_selection(X, y, n_features_to_select=20):
+def feature_selection(X, y, n_features_to_select=30):
     rfc = RandomForestClassifier()
     rfe = RFE(rfc, n_features_to_select=n_features_to_select, verbose=1)
     print("Starting Feature Selection")
     with parallel_backend("threading", n_jobs=4):
         rfe.fit(X, y)
     print("Finished Fitting")
+    print(rfe.support_)
+    print(rfe.ranking_)
+    print(rfe.get_support())
+    exit()
+
+
 
     # summarize the selection of the attributes
     feature_map = [(i, v) for i, v in itertools.zip_longest(rfe.get_support(), X.columns)]
@@ -105,16 +112,14 @@ def test_models():
     return df
 
 def train(save=True):
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
-    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
 
     df = clean_dataset(df)
     print(df.columns)
 
     # Full Classification
     X_train, X_test, y_train, y_test = preprocess(df.copy(), save=save)
-
-    feature_selection(X_train, X_test, n_features_to_select=20)
 
 
     # evaluate_classification(flaml_full, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)

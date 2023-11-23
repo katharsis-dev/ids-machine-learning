@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 import argparse
 from .utils import load_model, clean_dataset
-from .constants import SAVED_MODELS_MODULE, BENIGN_LABEL, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS
+from .constants import SAVED_MODELS_MODULE, BENIGN_LABEL, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS, FEATURE_SELECTION
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+import tensorflow
 import pkg_resources
 
 
@@ -16,7 +17,7 @@ class Model():
 
         # Load attack model
         if model is None:
-            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_full_v1.1_2023-11-11.pkl"))
+            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.6_2023-11-11.pkl"))
         else:
             self.model = model
 
@@ -25,12 +26,6 @@ class Model():
             self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.1_2023-11-11.pkl"))
         else:
             self.scaler = scaler
-
-        # Load PCA
-        if pca is None:
-            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.1_2023-11-11.pkl"))
-        else:
-            self.pca = pca
 
 
         self.ANOMALY_COLUMN = "anomaly"
@@ -41,8 +36,13 @@ class Model():
         """
         Clean up the dataframe before passing into model for predictions
         """
+        X = df
+        resulting_columns = []
+        for i in range(len(FEATURE_SELECTION)):
+            if FEATURE_SELECTION[i]:
+                resulting_columns.append(X.columns[i])
+        X = X[resulting_columns]
         X = self.scaler.transform(df)
-        X = self.pca.transform(X)
         return X
 
 

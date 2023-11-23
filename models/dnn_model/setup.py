@@ -27,7 +27,7 @@ setup(
     # long_description = long_description,
 
     license = "MIT license",
-    packages = find_packages(include=["flaml_model", "flaml_model.*"]),  # Don't include test directory in binary distribution
+    packages = find_packages(include=["dnn_model", "dnn_model.*"]),  # Don't include test directory in binary distribution
     # packages = find_packages(where="flaml_model"),
     # package_dir = {"": "flaml_model"},
     package_data={
