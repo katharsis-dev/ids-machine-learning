@@ -7,6 +7,8 @@ from utils import save_model, get_dataset_from_directories, evaluate_classificat
 from constants import BENIGN_LABEL
 import tensorflow as tf
 from tensorflow.keras import regularizers
+from tensorflow.keras import metrics
+from tensorflow_ranking.python.keras.metrics import MeanAveragePrecisionMetric
 
 
 MAIN_VERSION = 1
@@ -24,9 +26,10 @@ def preprocess(df, save=False):
 
     print(df["label"].value_counts())
 
-    X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]]
+    X, y = df.drop(df.columns[-1], axis=1), pd.get_dummies(df[df.columns[-1]]).astype(int).to_numpy()
+
     X = standarize_data(X, save=save)
-    X = pca_data(X, n_components=30, save=save)
+    # X = pca_data(X, n_components=30, save=save)
 
     # Split into training and test
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
@@ -89,9 +92,9 @@ def test_models():
     evaluate_classification_single(attack_predictions, y)
     return df
 
-def get_model(input):
+def get_model(num_inputs, num_outputs):
     model = tf.keras.Sequential([
-    tf.keras.layers.Dense(units=64, activation='relu', input_shape=input, 
+    tf.keras.layers.Dense(units=64, activation='relu', input_shape=num_inputs, 
                           kernel_regularizer=regularizers.L1L2(l1=1e-5, l2=1e-4), 
                           bias_regularizer=regularizers.L2(1e-4),
                           activity_regularizer=regularizers.L2(1e-5)),
@@ -111,35 +114,60 @@ def get_model(input):
                           bias_regularizer=regularizers.L2(1e-4),
                           activity_regularizer=regularizers.L2(1e-5)),
     tf.keras.layers.Dropout(0.4),
-    tf.keras.layers.Dense(units=1, activation='softmax'),
+    tf.keras.layers.Dense(units=num_outputs, activation='softmax'),
     ])
-    model.compile(optimizer='adam', loss="categorical_crossentropy", metrics=['accuracy'])
+    map = MeanAveragePrecisionMetric()
+    model.compile(optimizer='adam', loss="categorical_crossentropy", metrics=["accuracy", map, metrics.categorical_accuracy])
     return model
+
+def test_model(model_path):
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+
+    df = clean_dataset(df)
+    print(df.columns)
+
+    # Full Classification
+    X_train, X_test, y_train, y_test = preprocess(df.copy(), save=False)
+
+    dnn_model = load_model(model_path)
+
+    train_predictions = dnn_model.predict(X_train)
+    train_predictions = np.around(train_predictions, decimals=0)
+
+    test_predictions = dnn_model.predict(X_test)
+    test_predictions = np.around(test_predictions, decimals=0)
+
+    evaluate_classification_single(y_train, train_predictions)
+    evaluate_classification_single(y_test, test_predictions)
+
+    # evaluate_classification(dnn_model, "Traffic Classification Attack Type", X_train, X_test, y_train, y_test)
+
 
 def train(save=True):
     # %%
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
 
     df = clean_dataset(df)
     print(df.columns)
 
     # Full Classification
     X_train, X_test, y_train, y_test = preprocess(df.copy(), save=save)
-    dnn_model = get_model(X_train.shape[1:])
+    dnn_model = get_model(X_train.shape[1:], y_train.shape[-1])
+    print("Model created")
 
-    dnn_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30)
+    dnn_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=15, batch_size=128)
 
     if save:
         save_model(dnn_model, "DNN", MAIN_VERSION, SAVE_FOLDER)
 
-    print(dnn_model.best_config)
     evaluate_classification(dnn_model, "Traffic Classification Attack Type", X_train, X_test, y_train, y_test)
 
-    print(dnn_model.predict(X_test[:10]))
-
 if __name__ == "__main__":
-    train(save=True)
+    # train(save=True)
     # create_test_data()
-    # test_models()
+    test_model("./saved_models/DNN_v1.1_2023-11-11.pkl")
 
