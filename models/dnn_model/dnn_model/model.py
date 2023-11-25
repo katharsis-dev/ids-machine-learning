@@ -13,7 +13,7 @@ class Model():
     scaler: StandardScaler
     pca: PCA
 
-    def __init__(self, model, pca=None, scaler=None) -> None:
+    def __init__(self, model=None, attack_model=None, pca=None, scaler=None, attack_scaler=None) -> None:
 
         # Load attack model
         if model is None:
@@ -21,13 +21,32 @@ class Model():
         else:
             self.model = model
 
+        # Load attack model
+        if attack_model is None:
+            self.attack_model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/flaml_attack_type_v1.2_2023-11-11.pkl"))
+        else:
+            self.attack_model = attack_model
+
         # Load Scaler
         if scaler is None:
             self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.1_2023-11-11.pkl"))
         else:
             self.scaler = scaler
 
+        # Load Attack Scaler
+        if attack_scaler is None:
+            self.attack_scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_Attack_v1.1_2023-11-11.pkl"))
+        else:
+            self.attack_scaler = attack_scaler
 
+        # Load PCA
+        if pca is None:
+            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.1_2023-11-24.pkl"))
+        else:
+            self.pca = pca
+
+
+        self.ANOMALY_CONFIDENCE = "anomaly_confidence"
         self.ANOMALY_COLUMN = "anomaly"
         self.ATTACK_COLUMN = "attack_type"
 
@@ -42,7 +61,12 @@ class Model():
             if FEATURE_SELECTION[i]:
                 resulting_columns.append(X.columns[i])
         X = X[resulting_columns]
-        X = self.scaler.transform(df)
+        X_scaled = self.scaler.transform(X)
+        return X_scaled
+    
+    def preprocess_attack_dataframe(self, df: pd.DataFrame):
+        X = self.attack_scaler.transform(df)
+        X = self.pca.transform(X)
         return X
 
 
@@ -62,10 +86,25 @@ class Model():
             df_filtered = df[new_columns_set]
 
         X = self.preprocess_dataframe(df_filtered)
+        X_attack = self.preprocess_attack_dataframe(df_filtered)
 
         predictions = self.model.predict(X)
-        df[self.ANOMALY_COLUMN] = predictions
-        print(df[self.ANOMALY_COLUMN].value_counts())
+        df[self.ANOMALY_CONFIDENCE] = predictions
+        df[self.ANOMALY_COLUMN] = [1 if prediction > 0.5 else 0 for prediction in predictions]
+
+        attack_type_result = []
+        anomaly_values = df[self.ANOMALY_COLUMN].tolist()
+        for index in range(len(anomaly_values)):
+            result_label = BENIGN_LABEL
+            anomaly_value = anomaly_values[index]
+            if anomaly_value == 1:
+                result_label = self.attack_model.predict(np.array([X_attack[index]]))
+                result_label = result_label[0]
+            attack_type_result.append(result_label)
+
+        df[self.ATTACK_COLUMN] = attack_type_result
+        # print(df[self.ANOMALY_COLUMN].value_counts())
+        print(df[self.ATTACK_COLUMN].value_counts())
         return df
 
 

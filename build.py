@@ -42,13 +42,24 @@ def install_package(folder_path):
     python_location = os.path.join(folder_path, 'venv', 'Scripts' if os.name == 'nt' else 'bin', 'python')
     setup_location = os.path.join(folder_path, 'setup.py')
 
-    if os.path.isfile(setup_location):
-        # Run pyinstaller on main.py
-        subprocess.run(f". {activate_script}; cd {folder_path}; pip install .", shell=True)
+    development = input("Install package in developer mode(Y/N)? ").lower()
+    if development == "y":
+        if os.path.isfile(setup_location):
+            # Run pyinstaller on main.py
+            subprocess.run(f". {activate_script}; cd {folder_path}; pip install -e .", shell=True)
 
-        print("Finished installing module")
-        return True
-    print(f"Missing setup.py file.")
+            print("Finished installing module")
+            return True
+        print(f"Missing setup.py file.")
+
+    else:
+        if os.path.isfile(setup_location):
+            # Run pyinstaller on main.py
+            subprocess.run(f". {activate_script}; cd {folder_path}; pip install .", shell=True)
+
+            print("Finished installing module")
+            return True
+        print(f"Missing setup.py file.")
 
 
 def install_cic_flow_meter(folder_path):

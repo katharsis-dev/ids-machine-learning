@@ -35,7 +35,7 @@ def pca_data(X, n_components=30, pca=None, save=False):
 
 # %%
 def save_model(model, name, main_version, folder_path, replace=False):
-    date = datetime.now().strftime("%Y-%m-%m")
+    date = datetime.now().strftime("%Y-%m-%d")
     file_name = "{0}_v{1}.{2}_{3}.pkl"
 
     if replace:
