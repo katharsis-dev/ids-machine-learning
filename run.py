@@ -118,7 +118,9 @@ def process_new_files(folder_path, new_files):
 
             suspicious_df = result_df[result_df["attack_type"] != BENIGN_LABEL]
             if len(suspicious_df) != 0:
-                print(suspicious_df)
+                # print(suspicious_df)
+                print(suspicious_df["src_ip"].value_counts())
+                print(suspicious_df["attack_type"].value_counts())
                 print("\n")
 
 

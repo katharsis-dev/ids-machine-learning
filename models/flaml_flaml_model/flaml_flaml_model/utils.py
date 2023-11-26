@@ -10,6 +10,16 @@ from sklearn.metrics import mean_absolute_error, accuracy_score, recall_score, p
 
 SAVE_FOLDER = "saved_models"
 BENIGN_LABELS = ["BENIGN", "Benign", "benign"]
+
+def onehotencode_data(y, encoder=None, save=False):
+    if not encoder:
+        encoder = OneHotEncoder()
+        encoder.fit(y)
+        
+        if save:
+            save_model(encoder, "OneHotEncoder", 1, SAVE_FOLDER, replace=True)
+    y_encoded = encoder.transform(y).toarray()
+    return y_encoded
 # %%
 def standarize_data(X, scaler=None, save=False):
     if not scaler:
@@ -154,14 +164,14 @@ def evaluate_classification(model, name, X_train, X_test, y_train, y_test):
     train_accuracy = accuracy_score(y_train, train_predictions)
     test_accuracy = accuracy_score(y_test, test_predictions)
     
-    train_precision = precision_score(y_train, train_predictions, average="micro")
-    test_precision = precision_score(y_test, test_predictions, average="micro")
+    train_precision = precision_score(y_train, train_predictions, average="macro")
+    test_precision = precision_score(y_test, test_predictions, average="macro")
     
-    train_recall = recall_score(y_train, train_predictions, average="micro")
-    test_recall = recall_score(y_test, test_predictions, average="micro")
+    train_recall = recall_score(y_train, train_predictions, average="macro")
+    test_recall = recall_score(y_test, test_predictions, average="macro")
 
-    train_f1 = f1_score(y_train, train_predictions, average="micro")
-    test_f1 = f1_score(y_test, test_predictions, average="micro")
+    train_f1 = f1_score(y_train, train_predictions, average="macro")
+    test_f1 = f1_score(y_test, test_predictions, average="macro")
 
     
     print("Training Accuracy " + str(name) + " {}  Test Accuracy ".format(train_accuracy*100) + str(name) + " {}".format(test_accuracy*100))

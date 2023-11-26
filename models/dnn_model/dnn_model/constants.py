@@ -9,6 +9,7 @@ SSH_LABEL = "ssh-bruteforce"
 FTP_LABEL = "ftp-bruteforce"
 SQL_LABEL = "sql-injection"
 XSS_LABEL = "xss"
+WEB_LABEL = "web-bruteforce"
 
 
 FEATURE_SELECTION = [False, False, False, False, False, False, False, True, False, False, False, False, False, True, True, False, True, False, False, False, True, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True, True, False, False, False, False, False, True, False, False, False, False, False, False, True, True, False, True, True, True, True, True, False, False, False, False, False, True, False, False, True, False, True, False]

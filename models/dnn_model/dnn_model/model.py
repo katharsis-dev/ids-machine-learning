@@ -17,19 +17,19 @@ class Model():
 
         # Load attack model
         if model is None:
-            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-11-11.pkl"))
+            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-11-25.pkl"))
         else:
             self.model = model
 
         # Load Scaler
         if scaler is None:
-            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.1_2023-11-11.pkl"))
+            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.1_2023-11-25.pkl"))
         else:
             self.scaler = scaler
 
         # Load Encoder
         if encoder is None:
-            self.encoder = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/OneHotEncoder_v1.1_2023-11-11.pkl"))
+            self.encoder = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/OneHotEncoder_v1.1_2023-11-25.pkl"))
         else:
             self.encoder = encoder
 

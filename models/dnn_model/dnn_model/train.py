@@ -5,7 +5,7 @@ from sklearn.metrics import multilabel_confusion_matrix
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from utils import save_model, get_dataset_from_directories, evaluate_classification, clean_dataset, standarize_data, pca_data, load_model, evaluate_classification_single, onehotencode_data
-from constants import BENIGN_LABEL, FEATURE_SELECTION, SQL_LABEL, SSH_LABEL, FTP_LABEL, XSS_LABEL
+from constants import BENIGN_LABEL, FEATURE_SELECTION, SQL_LABEL, SSH_LABEL, FTP_LABEL, XSS_LABEL, WEB_LABEL
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras import metrics
@@ -15,10 +15,29 @@ from tensorflow_ranking.python.keras.metrics import MeanAveragePrecisionMetric
 MAIN_VERSION = 1
 SAVE_FOLDER = "./saved_models/"
 
+def remove_rows(df, column_value, percent, random_state=42) -> pd.DataFrame:
+
+    # Filter rows based on the condition
+    mask = df[df.columns[-1]].str.contains(column_value)
+    # Identify rows where 'Column2' is equal to 'benign'
+    rows_to_remove = df[mask].sample(frac=percent, random_state=random_state)
+    print("Removing", len(rows_to_remove))
+    df = df.drop(rows_to_remove.index)
+
+    return df
+
 def preprocess(df, save=False):
     print(df["label"].value_counts())
     # Rename dos labels as benign
+    df = remove_rows(df, "dos", 0.90)
     df["label"] = df["label"].apply(lambda x: BENIGN_LABEL if "dos" in x else x)
+    # Rename bot labels as benign
+    df = remove_rows(df, "bot", 0.70)
+    df["label"] = df["label"].apply(lambda x: BENIGN_LABEL if "bot" in x else x)
+    # Rename infiltration labels as benign
+    df = remove_rows(df, "infiltration", 0.80)
+    df["label"] = df["label"].apply(lambda x: BENIGN_LABEL if "infiltration" in x else x)
+
     # Rename sql label as sql-injection
     df["label"] = df["label"].apply(lambda x: SQL_LABEL if "sql" in x else x)
     # Rename ftp label as ftp-bruteforce
@@ -27,14 +46,10 @@ def preprocess(df, save=False):
     df["label"] = df["label"].apply(lambda x: SSH_LABEL if "ssh" in x else x)
     # Rename xss label as xss
     df["label"] = df["label"].apply(lambda x: XSS_LABEL if "xss" in x else x)
+    # Rename xss label as xss
+    df["label"] = df["label"].apply(lambda x: WEB_LABEL if "web" in x else x)
 
-    # Set the percentage of rows to remove
-    percentage_to_remove = 0.9  # Adjust this based on your requirement
-    # Identify rows where 'Column2' is equal to 'benign'
-    rows_to_remove = df[df[df.columns[-1]] == 'benign'].sample(frac=percentage_to_remove, random_state=42).index
-    # Drop the identified rows
-    df = df.drop(rows_to_remove)
-
+    df = remove_rows(df, "benign", 0.9)
     print(df["label"].value_counts())
     # df["label"] = df["label"].apply(lambda x: 0 if x == BENIGN_LABEL else 1)
     # print(df["label"].value_counts())
@@ -189,7 +204,7 @@ def train(save=True):
     evaluate_classification(dnn_model, "Traffic Classification Attack Type", X_train, X_test, y_train, y_test)
 
 if __name__ == "__main__":
-    train(save=True)
+    train(save=False)
     # create_test_data()
     # test_model("./saved_models/DNN_v1.1_2023-11-11.pkl")
 
