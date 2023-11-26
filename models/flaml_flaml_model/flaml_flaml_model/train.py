@@ -12,6 +12,18 @@ MAIN_VERSION = 1
 SAVE_FOLDER = "./saved_models/"
 
 def preprocess(df, save=False):
+    print(df["label"].value_counts())
+    df["label"] = df["label"].apply(lambda x: BENIGN_LABEL if "dos" in x else x)
+    print(df["label"].value_counts())
+
+    # Set the percentage of rows to remove
+    percentage_to_remove = 0.6  # Adjust this based on your requirement
+    # Identify rows where 'Column2' is equal to 'benign'
+    rows_to_remove = df[df[df.columns[-1]] == 'benign'].sample(frac=percentage_to_remove).index
+    # Drop the identified rows
+    df = df.drop(rows_to_remove)
+    print(df["label"].value_counts())
+
     df["label"] = df["label"].apply(lambda x: 0 if x == BENIGN_LABEL else 1)
     print(df["label"].value_counts())
 
@@ -24,10 +36,10 @@ def preprocess(df, save=False):
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
 
     # Oversampling
-    # sampler = RandomOverSampler(sampling_strategy="all")
+    sampler = RandomOverSampler(sampling_strategy="all")
 
     # Undersampling
-    sampler = RandomUnderSampler(sampling_strategy=0.7)
+    # sampler = RandomUnderSampler(sampling_strategy=0.7)
 
     X_train, y_train = sampler.fit_resample(X_train, y_train)
 
@@ -136,10 +148,12 @@ def train(save=True):
     time_budget = 400
     # %%
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter/", "../../../datasets/Custom/filter/"])
+    df = get_dataset_from_directories(["../../../datasets/Custom/filter/"])
     # df = get_dataset_from_directories(["../datasets/CSE-CIC-IDS2018/"])
     # df = get_dataset_from_directories(["../datasets/CIC-IDS-2017/TrafficLabelling/", "../datasets/CIC-IDS-2017/MachineLearningCVE/"])
-    # df = pd.read_csv("../datasets/CIC-IDS-2017/TrafficLabelling/Monday-WorkingHours.pcap_ISCX.csv")
+
     df = clean_dataset(df)
     print(df.columns)
 
@@ -155,18 +169,18 @@ def train(save=True):
     evaluate_classification(flaml_classification, "Traffic Classification Attack", X_train, X_test, y_train, y_test)
 
     # Classifying different attack types
-    X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_attack_types(df.copy(), save=save)
-    flaml_attack_classification = AutoML()
-    flaml_attack_classification.fit(X_attack_train, y_attack_train, task="classification", time_budget=time_budget)
-
-    if save:
-        save_model(flaml_attack_classification, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
-
-    print(flaml_attack_classification.best_config)
-    evaluate_classification(flaml_attack_classification, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
-
-    print(flaml_classification.predict(X_train[:10]))
-    print(flaml_attack_classification.predict(X_attack_train[:10]))
+    # X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_attack_types(df.copy(), save=save)
+    # flaml_attack_classification = AutoML()
+    # flaml_attack_classification.fit(X_attack_train, y_attack_train, task="classification", time_budget=time_budget)
+    #
+    # if save:
+    #     save_model(flaml_attack_classification, "flaml_attack_type", MAIN_VERSION, SAVE_FOLDER)
+    #
+    # print(flaml_attack_classification.best_config)
+    # evaluate_classification(flaml_attack_classification, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
+    #
+    # print(flaml_classification.predict(X_train[:10]))
+    # print(flaml_attack_classification.predict(X_attack_train[:10]))
 
     # Full Classification
     # X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_full(df.copy(), save=save)

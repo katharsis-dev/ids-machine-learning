@@ -1,15 +1,15 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import multilabel_confusion_matrix
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
-from utils import save_model, get_dataset_from_directories, evaluate_classification, clean_dataset, standarize_data, pca_data, load_model, evaluate_classification_single
-from constants import BENIGN_LABEL, FEATURE_SELECTION
+from utils import save_model, get_dataset_from_directories, evaluate_classification, clean_dataset, standarize_data, pca_data, load_model, evaluate_classification_single, onehotencode_data
+from constants import BENIGN_LABEL, FEATURE_SELECTION, SQL_LABEL, SSH_LABEL, FTP_LABEL, XSS_LABEL
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras import metrics
 from tensorflow_ranking.python.keras.metrics import MeanAveragePrecisionMetric
-import autokeras as ak
 
 
 MAIN_VERSION = 1
@@ -17,18 +17,30 @@ SAVE_FOLDER = "./saved_models/"
 
 def preprocess(df, save=False):
     print(df["label"].value_counts())
+    # Rename dos labels as benign
+    df["label"] = df["label"].apply(lambda x: BENIGN_LABEL if "dos" in x else x)
+    # Rename sql label as sql-injection
+    df["label"] = df["label"].apply(lambda x: SQL_LABEL if "sql" in x else x)
+    # Rename ftp label as ftp-bruteforce
+    df["label"] = df["label"].apply(lambda x: FTP_LABEL if "ftp" in x else x)
+    # Rename ssh label as ssh-bruteforce
+    df["label"] = df["label"].apply(lambda x: SSH_LABEL if "ssh" in x else x)
+    # Rename xss label as xss
+    df["label"] = df["label"].apply(lambda x: XSS_LABEL if "xss" in x else x)
 
     # Set the percentage of rows to remove
-    percentage_to_remove = 0.8  # Adjust this based on your requirement
+    percentage_to_remove = 0.9  # Adjust this based on your requirement
     # Identify rows where 'Column2' is equal to 'benign'
-    rows_to_remove = df[df[df.columns[-1]] == 'benign'].sample(frac=percentage_to_remove).index
+    rows_to_remove = df[df[df.columns[-1]] == 'benign'].sample(frac=percentage_to_remove, random_state=42).index
     # Drop the identified rows
     df = df.drop(rows_to_remove)
 
-    df["label"] = df["label"].apply(lambda x: 0 if x == BENIGN_LABEL else 1)
     print(df["label"].value_counts())
+    # df["label"] = df["label"].apply(lambda x: 0 if x == BENIGN_LABEL else 1)
+    # print(df["label"].value_counts())
 
-    X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]].to_numpy()
+    X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]].to_numpy().reshape(-1, 1)
+
 
     print("Columns before feature selection:", len(X.columns))
     resulting_columns = []
@@ -41,6 +53,9 @@ def preprocess(df, save=False):
 
     X = standarize_data(X, save=save)
     # X = pca_data(X, n_components=30, save=save)
+
+    y = onehotencode_data(y, save=save)
+    print("One Hot Encoded Shape:", y.shape)
 
     # Split into training and test
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
@@ -114,18 +129,20 @@ def get_model(num_inputs, num_outputs):
         tf.keras.layers.Dense(units=256, activation='relu'),
         tf.keras.layers.Dropout(0.4),
         tf.keras.layers.Dense(units=128, activation='relu'),
-        # tf.keras.layers.Dense(units=num_outputs, activation='softmax'),
-        tf.keras.layers.Dense(units=num_outputs, activation='sigmoid'),
+        tf.keras.layers.Dense(units=num_outputs, activation='softmax'),
+        # tf.keras.layers.Dense(units=num_outputs, activation='sigmoid'),
         ])
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     map = MeanAveragePrecisionMetric()
-    # model.compile(optimizer='adam', loss="categoricl_crossentropy", metrics=["accuracy", map, metrics.categorical_accuracy])
-    model.compile(optimizer='adam', loss="binary_crossentropy", metrics=[metrics.BinaryAccuracy(), metrics.Precision(), metrics.Recall()])
+    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=[map, metrics.categorical_accuracy, metrics.TopKCategoricalAccuracy(k=3)])
+    # model.compile(optimizer='adam', loss="binary_crossentropy", metrics=[metrics.BinaryAccuracy(), metrics.Precision(), metrics.Recall()])
     return model
 
 def test_model(model_path):
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter", "../../../datasets/Custom/labeled/filter/"])
 
     df = clean_dataset(df)
     print(df.columns)
@@ -152,7 +169,8 @@ def train(save=True):
     # %%
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter", "../../../datasets/Custom/labeled/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/Custom/filter/"])
 
     df = clean_dataset(df)
 
@@ -161,9 +179,9 @@ def train(save=True):
     print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
 
-    dnn_model = get_model(X_train.shape[1:], 1)
+    dnn_model = get_model(X_train.shape[1:], y_test.shape[-1])
     print("Model created")
-    dnn_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=128)
+    dnn_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=312)
     if save:
         save_model(dnn_model, "DNN", MAIN_VERSION, SAVE_FOLDER)
 
@@ -171,7 +189,7 @@ def train(save=True):
     evaluate_classification(dnn_model, "Traffic Classification Attack Type", X_train, X_test, y_train, y_test)
 
 if __name__ == "__main__":
-    # train(save=True)
+    train(save=True)
     # create_test_data()
-    test_model("./saved_models/DNN_v1.6_2023-11-11.pkl")
+    # test_model("./saved_models/DNN_v1.1_2023-11-11.pkl")
 
