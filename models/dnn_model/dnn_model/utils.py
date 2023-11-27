@@ -206,14 +206,14 @@ class FeatureSelection(BaseEstimator, TransformerMixin):
 
     def transform(self, X: pd.DataFrame):
         assert isinstance(X, pd.DataFrame)
-        print("Columns before feature selection:", len(X.columns))
+        # print("Columns before feature selection:", len(X.columns))
         resulting_columns = []
         for i in range(len(self.features_to_select)):
             if self.features_to_select[i]:
                 resulting_columns.append(X.columns[i])
         X = X[resulting_columns]
-        print("Columns after feature selection:", len(X.columns))
-        print(X.shape)
+        # print("Columns after feature selection:", len(X.columns))
+        # print(X.shape)
         return X
 
 
