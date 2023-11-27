@@ -217,23 +217,6 @@ class FeatureSelection(BaseEstimator, TransformerMixin):
         return X
 
 
-class StandarizeData(BaseEstimator, TransformerMixin):
-    def __init__(self) -> None:
-        super().__init__()
-        self.scaler = StandardScaler()
-
-    def fit(self, X, y=None, save=True):
-        self.scaler.fit(X)
-        return self
-
-    def transform(self, X):
-        X_scaled = self.scaler.transform(X)
-        print(X_scaled.shape)
-        return X_scaled
-
-    def save(self):
-        save_model(self, "CustomStandardScaler", 1, SAVE_FOLDER, replace=True)
-
 class DNNModel(BaseEstimator, TransformerMixin):
     def __init__(self, num_inputs: int, num_outputs: int) -> None:
         super().__init__()

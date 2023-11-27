@@ -4,8 +4,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import multilabel_confusion_matrix
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
+from sklearn.preprocessing import StandardScaler
 from utils import save_model, get_dataset_from_directories, evaluate_classification, clean_dataset, standarize_data, pca_data, load_model, evaluate_classification_single, onehotencode_data
-import utils
+from utils import DNNModel, FeatureSelection
 from constants import BENIGN_LABEL, FEATURE_SELECTION, SQL_LABEL, SSH_LABEL, FTP_LABEL, XSS_LABEL, WEB_LABEL
 import tensorflow as tf
 from sklearn.pipeline import Pipeline
@@ -276,15 +277,18 @@ def run_pipeline(save=True):
     X_train, y_train = sampler.fit_resample(X_train, y_train)
     print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
-    dnn_model = utils.DNNModel(20, 8)
+    dnn_model = DNNModel(20, 8)
+    scaler = StandardScaler()
     pipeline = Pipeline([
-        ("feature_selection", utils.FeatureSelection(FEATURE_SELECTION)),
-        ("standard_scaler", utils.StandarizeData()),
+        ("feature_selection", FeatureSelection(FEATURE_SELECTION)),
+        ("standard_scaler", scaler),
         ("dnn_model", dnn_model),
         ])
     pipeline.fit(X_train, y_train)
 
-    save_model(pipeline, "DNN_Pipeline", MAIN_VERSION, SAVE_FOLDER)
+    if save:
+        save_model(dnn_model, "DNN_Pipeline", MAIN_VERSION, SAVE_FOLDER)
+        save_model(scaler, "StandardScaler_Pipeline", MAIN_VERSION, SAVE_FOLDER)
 
     train_predictions = pipeline.predict(X_train)
     train_predictions = np.around(train_predictions, decimals=0)
@@ -321,16 +325,21 @@ def save_pipeline(pipeline):
     # ("standard_scaler", utils.StandarizeData()),
     # ("dnn_model", dnn_model),
     feature_selection = pipeline.named_steps["feature_selection"]
-    standard_scaler = pipeline.named_steps["standard_scaler"]
-    dnn_model = pipeline.named_steps["dnn_model"]
-    save_model(dnn_model, "TESTING", MAIN_VERSION, SAVE_FOLDER)
-    print(type(dnn_model))
+    standard_scaler = pipeline.named_steps["standard_scaler"].scaler
+    dnn_model = pipeline.named_steps["dnn_model"].model
+
+    # print(type(dnn_model))
+    # save_model(dnn_model, "DNN_Pipeline", MAIN_VERSION, SAVE_FOLDER)
+
+    # print(type(standard_scaler))
+    # save_model(standard_scaler, "StandardScaler_Pipeline", MAIN_VERSION, SAVE_FOLDER)
 
 if __name__ == "__main__":
-    # run_pipeline(save=True)
+    run_pipeline(save=False)
 
     # evaluate_pipeline(load_model("./saved_models/DNN_Pipeline_v1.1_2023-11-26.pkl"))
-    save_pipeline(load_model("./saved_models/DNN_Pipeline_v1.1_2023-11-26.pkl"))
+    # save_pipeline(load_model("./saved_models/DNN_Pipeline_v1.1_2023-11-26.pkl"))
+
     # train(save=False)
     # create_test_data()
     # test_model("./saved_models/DNN_v1.1_2023-11-25.pkl")

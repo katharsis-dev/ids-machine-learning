@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import argparse
-from .utils import load_model, clean_dataset
+from .utils import load_model, clean_dataset, FeatureSelection
 from .constants import SAVED_MODELS_MODULE, BENIGN_LABEL, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS, FEATURE_SELECTION
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -18,11 +18,15 @@ class Model():
 
         # Load attack model
         if model is None:
-            # self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_Pipeline_v1.1_2023-11-26.pkl"))
-            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/TESTING_v1.1_2023-11-26.pkl"))
-            # self.model = tf.keras.models.load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-11-25.keras"))
+            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_Pipeline_v1.2_2023-11-26.pkl"))
         else:
             self.model = model
+
+        # Load scaler
+        if scaler is None:
+            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_Pipeline_v1.1_2023-11-26.pkl"))
+        else:
+            self.scaler = scaler
 
         # Load Encoder
         if encoder is None:
@@ -33,6 +37,15 @@ class Model():
         self.ANOMALY_CONFIDENCE = "anomaly_confidence"
         self.ANOMALY_COLUMN = "anomaly"
         self.ATTACK_COLUMN = "attack_type"
+        self.pipeline = self.build_pipeline()
+
+    def build_pipeline(self):
+        pipeline = Pipeline([
+            ("feature_selection", FeatureSelection(FEATURE_SELECTION)),
+            ("standard_scaler", self.scaler),
+            ("dnn_model", self.model)
+            ])
+        return pipeline
 
     
     def predict(self, df: pd.DataFrame):
@@ -51,7 +64,7 @@ class Model():
             df_filtered = df[new_columns_set]
 
         X = df_filtered
-        predictions = self.model.predict(X)
+        predictions = self.pipeline.predict(X)
 
         # Find the index of the maximum value in each row
         max_indices = np.argmax(predictions, axis=1)
