@@ -12,10 +12,13 @@ def create_virtualenv(folder_path):
         if rebuild == "y":
             print("Removing existing environment", environment_path)
             subprocess.run(f"rm -r {environment_path}", shell=True)
-
             # Create a virtual environment
             subprocess.run(f"cd {folder_path}; python -m venv venv;", shell=True)
             print(f"Created New Virtual Environment in {folder_path}")
+    else:
+        # Create a virtual environment
+        subprocess.run(f"cd {folder_path}; python -m venv venv;", shell=True)
+        print(f"Created New Virtual Environment in {folder_path}")
 
 def install_requirements(folder_path):
     # Activate the virtual environment
