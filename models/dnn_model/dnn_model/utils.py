@@ -5,7 +5,9 @@ import pandas as pd
 from datetime import datetime
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.metrics import mean_absolute_error, accuracy_score, recall_score, precision_score, confusion_matrix, f1_score, mean_squared_error, max_error
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error, accuracy_score, recall_score, precision_score, confusion_matrix, f1_score, mean_squared_error, max_error, multilabel_confusion_matrix
 
 
 SAVE_FOLDER = "saved_models"
@@ -154,6 +156,7 @@ def evaluate_classification_single(y_label, y_pred, name="Evaluation"):
     print(f"Precision:    {round(precision * 100, 2):>15}")
     print(f"Recall:       {round(recall * 100, 2):>15}")
     print(f"F1 Score:     {round(f1 * 100, 2):>15}")
+    print(multilabel_confusion_matrix(y_label, y_pred))
 
 # %%
 def evaluate_classification(model, name, X_train, X_test, y_train, y_test):
@@ -192,3 +195,79 @@ def evaluate_classification(model, name, X_train, X_test, y_train, y_test):
     # fig, ax = plt.subplots(figsize=(10,10))
     # ax.grid(False)
     # cm_display.plot(ax=ax)
+
+class FeatureSelection(BaseEstimator, TransformerMixin):
+    def __init__(self, features_to_select) -> None:
+        super().__init__()
+        self.features_to_select = features_to_select
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X: pd.DataFrame):
+        assert isinstance(X, pd.DataFrame)
+        print("Columns before feature selection:", len(X.columns))
+        resulting_columns = []
+        for i in range(len(self.features_to_select)):
+            if self.features_to_select[i]:
+                resulting_columns.append(X.columns[i])
+        X = X[resulting_columns]
+        print("Columns after feature selection:", len(X.columns))
+        print(X.shape)
+        return X
+
+
+class StandarizeData(BaseEstimator, TransformerMixin):
+    def __init__(self) -> None:
+        super().__init__()
+        self.scaler = StandardScaler()
+
+    def fit(self, X, y=None, save=True):
+        self.scaler.fit(X)
+        return self
+
+    def transform(self, X):
+        X_scaled = self.scaler.transform(X)
+        print(X_scaled.shape)
+        return X_scaled
+
+    def save(self):
+        save_model(self, "CustomStandardScaler", 1, SAVE_FOLDER, replace=True)
+
+class DNNModel(BaseEstimator, TransformerMixin):
+    def __init__(self, num_inputs: int, num_outputs: int) -> None:
+        super().__init__()
+        import tensorflow as tf
+        from tensorflow.keras import metrics
+        from tensorflow_ranking.python.keras.metrics import MeanAveragePrecisionMetric
+        self.model = tf.keras.Sequential([
+            tf.keras.layers.Dense(units=128, activation='relu', input_shape=(num_inputs,)),
+            tf.keras.layers.Dropout(0.4),
+            tf.keras.layers.Dense(units=256, activation='relu'),
+            tf.keras.layers.Dropout(0.4),
+            tf.keras.layers.Dense(units=512, activation='relu'),
+            tf.keras.layers.Dropout(0.4),
+            tf.keras.layers.Dense(units=256, activation='relu'),
+            tf.keras.layers.Dropout(0.4),
+            tf.keras.layers.Dense(units=128, activation='relu'),
+            tf.keras.layers.Dense(units=num_outputs, activation='softmax'),
+            # tf.keras.layers.Dense(units=num_outputs, activation='sigmoid'),
+            ])
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+        map = MeanAveragePrecisionMetric()
+        self.model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=[map, metrics.categorical_accuracy, metrics.TopKCategoricalAccuracy(k=3)])
+        # model.compile(optimizer='adam', loss="binary_crossentropy", metrics=[metrics.BinaryAccuracy(), metrics.Precision(), metrics.Recall()])
+
+    def fit(self, X_train, y_train, X_test=None, y_test=None, epochs=10, batch_size=312):
+        if X_test and y_test:
+            self.model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs, batch_size=batch_size)
+        else:
+            self.model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
+        return self
+        
+    def transform(self, X):
+        return self.model.predict(X)
+
+    def predict(self, X):
+        return self.model.predict(X)
+
