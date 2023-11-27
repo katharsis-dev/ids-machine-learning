@@ -29,7 +29,7 @@ def install_requirements(folder_path):
 
     if os.path.isfile(requirements_location):
         rebuild = input("Force Reinstall all packages(Y/N)? ").lower()
-        if rebuild == "y":
+        if rebuild == "n":
             # Install requirements
             subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-deps -r requirements.txt", shell=True)
             # subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-dependencies --force -r requirements.txt", shell=True)
