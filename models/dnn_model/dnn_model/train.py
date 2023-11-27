@@ -204,7 +204,7 @@ def train(save=True):
     evaluate_classification(dnn_model, "Traffic Classification Attack Type", X_train, X_test, y_train, y_test)
 
 if __name__ == "__main__":
-    # train(save=False)
+    train(save=False)
     # create_test_data()
-    test_model("./saved_models/DNN_v1.1_2023-11-25.pkl")
+    # test_model("./saved_models/DNN_v1.1_2023-11-25.pkl")
 

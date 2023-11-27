@@ -5,7 +5,7 @@ from .utils import load_model, clean_dataset
 from .constants import SAVED_MODELS_MODULE, BENIGN_LABEL, COLUMN_LENGTH_RAW, COLUMN_LENGTH_FILTERED, REMOVE_RAW_COLUMNS, FEATURE_SELECTION
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import tensorflow
+import tensorflow as tf
 import pkg_resources
 
 
@@ -17,7 +17,8 @@ class Model():
 
         # Load attack model
         if model is None:
-            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-11-25.pkl"))
+            # self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-11-25.pkl"))
+            self.model = tf.keras.models.load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-11-25.keras"))
         else:
             self.model = model
 

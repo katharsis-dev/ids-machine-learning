@@ -8,13 +8,14 @@ def create_virtualenv(folder_path):
 
     environment_path = os.path.join(folder_path, "venv")
     if os.path.isdir(environment_path):
-        print("Removing existing environment", environment_path)
-        subprocess.run(f"rm -r {environment_path}", shell=True)
+        rebuild = input("Remove Old Environment and rebuild (Y/N)? ").lower()
+        if rebuild == "y":
+            print("Removing existing environment", environment_path)
+            subprocess.run(f"rm -r {environment_path}", shell=True)
 
-    # Create a virtual environment
-    # subprocess.run(['python', '-m', 'venv', 'venv'])
-    subprocess.run(f"cd {folder_path}; python -m venv venv;", shell=True)
-    print(f"Created Virtual Environment in {folder_path}")
+            # Create a virtual environment
+            subprocess.run(f"cd {folder_path}; python -m venv venv;", shell=True)
+            print(f"Created New Virtual Environment in {folder_path}")
 
 def install_requirements(folder_path):
     # Activate the virtual environment
