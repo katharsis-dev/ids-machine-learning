@@ -158,6 +158,7 @@ def test_model(model_path):
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
     df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter", "../../../datasets/Custom/labeled/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/Custom/labeled/filter/"])
 
     df = clean_dataset(df)
     print(df.columns)
@@ -200,11 +201,10 @@ def train(save=True):
     if save:
         save_model(dnn_model, "DNN", MAIN_VERSION, SAVE_FOLDER)
 
-
     evaluate_classification(dnn_model, "Traffic Classification Attack Type", X_train, X_test, y_train, y_test)
 
 if __name__ == "__main__":
-    train(save=False)
+    # train(save=False)
     # create_test_data()
-    # test_model("./saved_models/DNN_v1.1_2023-11-11.pkl")
+    test_model("./saved_models/DNN_v1.1_2023-11-25.pkl")
 

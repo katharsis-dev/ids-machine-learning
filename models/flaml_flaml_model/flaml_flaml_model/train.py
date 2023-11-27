@@ -149,47 +149,18 @@ def create_test_data():
     print("Test Dataset created")
 
 
-def test_models():
-    ANOMALY_COLUMN = "anomaly"
-    ATTACK_COLUMN = "attack_type"
-
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+def test_model(model_path):
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter/", "../../../datasets/Custom/labeled/filter/"])
+    df = get_dataset_from_directories(["../../../datasets/Custom/labeled/filter/"])
     df = clean_dataset(df)
-
-    df = df.sample(n=100000)
-    flaml_classification = load_model("./saved_models/flaml_classification_v1.1_2023-11-11.pkl")
-    flaml_attack_classification = load_model("./saved_models/flaml_attack_type_v1.1_2023-11-11.pkl")
-
-    X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]]
-    scaler = load_model("./saved_models/StandardScaler_v1.1_2023-11-11.pkl")
-    X = standarize_data(X, scaler=scaler)
-    pca = load_model("./saved_models/PCA_v1.1_2023-11-11.pkl")
-    X = pca_data(X, n_components=30, pca=pca)
-
-    anomaly_predictions = flaml_classification.predict(X)
-
-    df[ANOMALY_COLUMN] = anomaly_predictions
-
-    attack_predictions = []
-    for i in range(len(df)):
-        anomaly_prediction = anomaly_predictions[i]
-        attack_prediction = BENIGN_LABEL
-        if anomaly_prediction == 1:
-            attack_prediction = flaml_attack_classification.predict(np.array([X[i]]))
-            attack_prediction = attack_prediction[0]
-
-        attack_predictions.append(attack_prediction)
-
-    df[ATTACK_COLUMN] = attack_predictions
-    print(df[ANOMALY_COLUMN].value_counts())
-    print(df[ATTACK_COLUMN].value_counts())
-    print(df[ATTACK_COLUMN])
-    print(y)
-    evaluate_classification_single(attack_predictions, y)
-    return df
+    X_attack_train, X_attack_test, y_attack_train, y_attack_test = preprocess_full(df.copy(), save=False)
+    model = load_model(model_path)
+    model.predict(X_attack_train.to_numpy())
+    model.predict(X_attack_train)
+    evaluate_classification(model, "Traffic Classification Attack Type", X_attack_train, X_attack_test, y_attack_train, y_attack_test)
 
 def train(save=True):
-    time_budget = 600
+    time_budget = 400
     # %%
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter/"])
@@ -245,7 +216,7 @@ def train(save=True):
     # print(flaml_full.predict(X_attack_train[:10]))
 
 if __name__ == "__main__":
-    train(save=False)
+    # train(save=True)
     # create_test_data()
-    # test_models()
+    test_model("./saved_models/flaml_full_v1.1_2023-11-26.pkl")
 
