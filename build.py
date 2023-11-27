@@ -25,10 +25,17 @@ def install_requirements(folder_path):
     requirements_location = os.path.join(folder_path, "requirements.txt")
 
     if os.path.isfile(requirements_location):
-        # Install requirements
-        subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-deps --force -r requirements.txt", shell=True)
-        # subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-dependencies --force -r requirements.txt", shell=True)
-        return True
+        rebuild = input("Force Reinstall all packages(Y/N)? ").lower()
+        if rebuild == "y":
+            # Install requirements
+            subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-deps -r requirements.txt", shell=True)
+            # subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-dependencies --force -r requirements.txt", shell=True)
+            return True
+        else:
+            # Install requirements
+            subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-deps --force -r requirements.txt", shell=True)
+            # subprocess.run(f". {activate_script}; cd {folder_path}; pip install --no-dependencies --force -r requirements.txt", shell=True)
+            return True
     print(f"Missing requirements.txt file in {folder_path}")
     return False
 
