@@ -101,18 +101,18 @@ def preprocess(df, save=False):
 
     X, y = df.drop(df.columns[-1], axis=1), df[df.columns[-1]].to_numpy().reshape(-1, 1)
 
-
-    print("Columns before feature selection:", len(X.columns))
-    resulting_columns = []
-    for i in range(len(FEATURE_SELECTION)):
-        if FEATURE_SELECTION[i]:
-            resulting_columns.append(X.columns[i])
-    X = X[resulting_columns]
-
-    print("Columns after feature selection:", len(X.columns))
+    #
+    # print("Columns before feature selection:", len(X.columns))
+    # resulting_columns = []
+    # for i in range(len(FEATURE_SELECTION)):
+    #     if FEATURE_SELECTION[i]:
+    #         resulting_columns.append(X.columns[i])
+    # X = X[resulting_columns]
+    #
+    # print("Columns after feature selection:", len(X.columns))
 
     X = standarize_data(X, save=save)
-    # X = pca_data(X, n_components=30, save=save)
+    X = pca_data(X, n_components=30, save=save)
 
     y = onehotencode_data(y, save=save)
     print("One Hot Encoded Shape:", y.shape)
@@ -230,8 +230,23 @@ def train(save=True):
     # %%
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
     # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
-    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter", "../../../datasets/Custom/labeled/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter", "../../../datasets/Custom/labeled/filter/"])
     # df = get_dataset_from_directories(["../../../datasets/Custom/filter/"])
+
+    df_1 = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter"])
+    print(len(df_1))
+    print(df_1["label"].value_counts())
+    df_1 = df_1.sample(frac=0.2, random_state=42)
+    print(len(df_1))
+    print(df_1["label"].value_counts())
+
+    df_2 = get_dataset_from_directories(["../../../datasets/Custom/labeled/filter/"])
+    print(len(df_2))
+    print(df_2["label"].value_counts())
+
+    df = pd.concat([df_1, df_2], ignore_index=True, verify_integrity=True)
+    print(len(df))
+    print(df["label"].value_counts())
 
     df = clean_dataset(df)
 
@@ -242,8 +257,8 @@ def train(save=True):
 
     dnn_model = get_model(X_train.shape[1:], y_test.shape[-1])
     print("Model created")
-    return
-    dnn_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=312)
+
+    dnn_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=15, batch_size=512)
     if save:
         save_model(dnn_model, "DNN", MAIN_VERSION, SAVE_FOLDER)
 
@@ -255,6 +270,47 @@ def train(save=True):
 
     evaluate_classification_single(y_train, train_predictions)
     evaluate_classification_single(y_test, test_predictions)
+
+def train_random_forest(save=False):
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.datasets import load_iris
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import accuracy_score
+
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter", "../../../datasets/Custom/labeled/filter/"])
+    df = clean_dataset(df)
+
+    # Full Classification
+    X_train, X_test, y_train, y_test = preprocess(df.copy(), save=save)
+    print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
+
+    # Define the Random Forest classifier
+    rf_model = RandomForestClassifier()
+
+    # Define the parameter grid to search
+    param_grid = {
+        'n_estimators': [200, 400, 600],
+        'max_depth': [None, 10, 20],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+        }
+    # Create the GridSearchCV object
+    grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+
+    grid_search.fit(X_train, y_train)
+    # Print the best parameters and the corresponding accuracy
+    print("Best Parameters: ", grid_search.best_params_)
+    print("Best Accuracy: ", grid_search.best_score_)
+
+    # Use the best model to make predictions on the test set
+    best_rf_model = grid_search.best_estimator_
+    train_predictions = best_rf_model.predict(X_train)
+    test_predictions = best_rf_model.predict(X_test)
+
+    evaluate_classification_single(y_train, train_predictions)
+    evaluate_classification_single(y_test, test_predictions)
+
 
 def run_pipeline(save=True):
     df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter", "../../../datasets/Custom/labeled/filter/"])
@@ -335,12 +391,13 @@ def save_pipeline(pipeline):
     # save_model(standard_scaler, "StandardScaler_Pipeline", MAIN_VERSION, SAVE_FOLDER)
 
 if __name__ == "__main__":
-    run_pipeline(save=False)
+    # train_random_forest(save=False)
+    # run_pipeline(save=False)
 
     # evaluate_pipeline(load_model("./saved_models/DNN_Pipeline_v1.1_2023-11-26.pkl"))
     # save_pipeline(load_model("./saved_models/DNN_Pipeline_v1.1_2023-11-26.pkl"))
 
-    # train(save=False)
+    train(save=True)
     # create_test_data()
     # test_model("./saved_models/DNN_v1.1_2023-11-25.pkl")
 

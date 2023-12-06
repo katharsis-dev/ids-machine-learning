@@ -224,24 +224,30 @@ class DNNModel(BaseEstimator, TransformerMixin):
         from tensorflow.keras import metrics
         from tensorflow_ranking.python.keras.metrics import MeanAveragePrecisionMetric
         self.model = tf.keras.Sequential([
-            tf.keras.layers.Dense(units=128, activation='relu', input_shape=(num_inputs,)),
+            tf.keras.layers.Dense(units=64, activation='relu', input_shape=(num_inputs,),
+                                  kernel_regularizer=tf.keras.regularizers.L1L2(l1=1e-5, l2=1e-4), 
+                                  bias_regularizer=tf.keras.regularizers.L2(1e-4),
+                                  activity_regularizer=tf.keras.regularizers.L2(1e-5)),
+            tf.keras.layers.Dropout(0.6),
+            tf.keras.layers.Dense(units=64, activation='relu',
+                                  kernel_regularizer=tf.keras.regularizers.L1L2(l1=1e-5, l2=1e-4), 
+                                  bias_regularizer=tf.keras.regularizers.L2(1e-4),
+                                  activity_regularizer=tf.keras.regularizers.L2(1e-5)),
+            tf.keras.layers.Dropout(0.7),
+            tf.keras.layers.Dense(units=32, activation='relu'),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(units=16, activation='relu'),
             tf.keras.layers.Dropout(0.4),
-            tf.keras.layers.Dense(units=256, activation='relu'),
-            tf.keras.layers.Dropout(0.4),
-            tf.keras.layers.Dense(units=512, activation='relu'),
-            tf.keras.layers.Dropout(0.4),
-            tf.keras.layers.Dense(units=256, activation='relu'),
-            tf.keras.layers.Dropout(0.4),
-            tf.keras.layers.Dense(units=128, activation='relu'),
+            # tf.keras.layers.Dense(units=16, activation='relu'),
             tf.keras.layers.Dense(units=num_outputs, activation='softmax'),
             # tf.keras.layers.Dense(units=num_outputs, activation='sigmoid'),
             ])
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+        optimizer = tf.keras.optimizers.Adam(learning_rate="adaptive")
         map = MeanAveragePrecisionMetric()
-        self.model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=[map, metrics.categorical_accuracy, metrics.TopKCategoricalAccuracy(k=3)])
+        self.model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=[map, metrics.categorical_accuracy, metrics.TopKCategoricalAccuracy(k=1)])
         # model.compile(optimizer='adam', loss="binary_crossentropy", metrics=[metrics.BinaryAccuracy(), metrics.Precision(), metrics.Recall()])
 
-    def fit(self, X_train, y_train, X_test=None, y_test=None, epochs=10, batch_size=312):
+    def fit(self, X_train, y_train, X_test=None, y_test=None, epochs=10, batch_size=256):
         if X_test and y_test:
             self.model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs, batch_size=batch_size)
         else:

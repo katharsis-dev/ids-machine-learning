@@ -215,8 +215,25 @@ def train(save=True):
     # print(flaml_full.predict(X_train[:10]))
     # print(flaml_full.predict(X_attack_train[:10]))
 
+def get_dataset_stats():
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    # df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/", "../../../datasets/CIC-IDS-2018/filter/"])
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2017/MachineLearningCVE/filter/"])
+    df = clean_dataset(df)
+    print(df["label"].value_counts())
+
+    df = get_dataset_from_directories(["../../../datasets/CIC-IDS-2018/filter/"])
+    df = clean_dataset(df)
+    print(df["label"].value_counts())
+
+    df = get_dataset_from_directories(["../../../datasets/Custom/labeled/filter/"])
+    df = clean_dataset(df)
+    print(df["label"].value_counts())
+
+
 if __name__ == "__main__":
+    get_dataset_stats()
     # train(save=True)
     # create_test_data()
-    test_model("./saved_models/flaml_full_v1.1_2023-11-26.pkl")
+    # test_model("./saved_models/flaml_full_v1.1_2023-11-26.pkl")
 

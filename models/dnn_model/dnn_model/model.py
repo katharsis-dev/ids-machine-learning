@@ -18,19 +18,25 @@ class Model():
 
         # Load attack model
         if model is None:
-            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_Pipeline_v1.2_2023-11-26.pkl"))
+            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-12-06.pkl"))
         else:
             self.model = model
 
         # Load scaler
         if scaler is None:
-            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_Pipeline_v1.1_2023-11-26.pkl"))
+            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.1_2023-12-06.pkl"))
         else:
             self.scaler = scaler
 
+        # Load pca
+        if pca is None:
+            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.1_2023-12-06.pkl"))
+        else:
+            self.pca = pca
+
         # Load Encoder
         if encoder is None:
-            self.encoder = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/OneHotEncoder_v1.1_2023-11-26.pkl"))
+            self.encoder = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/OneHotEncoder_v1.1_2023-12-06.pkl"))
         else:
             self.encoder = encoder
 
@@ -41,8 +47,9 @@ class Model():
 
     def build_pipeline(self):
         pipeline = Pipeline([
-            ("feature_selection", FeatureSelection(FEATURE_SELECTION)),
+            # ("feature_selection", FeatureSelection(FEATURE_SELECTION)),
             ("standard_scaler", self.scaler),
+            ("pca", self.pca),
             ("dnn_model", self.model)
             ])
         return pipeline
