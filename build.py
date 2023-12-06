@@ -26,6 +26,7 @@ def install_requirements(folder_path):
     pip_location = os.path.join(folder_path, 'venv', 'Scripts' if os.name == 'nt' else 'bin', 'pip')
     python_location = os.path.join(folder_path, 'venv', 'Scripts' if os.name == 'nt' else 'bin', 'python')
     requirements_location = os.path.join(folder_path, "requirements.txt")
+    subprocess.run(f". {activate_script}; cd {folder_path}; pip install --upgrade pip;", shell=True)
 
     if os.path.isfile(requirements_location):
         rebuild = input("Force Reinstall all packages(Y/N)? ").lower()
