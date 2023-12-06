@@ -16,9 +16,10 @@ class Model():
 
     def __init__(self, model=None, attack_model=None, pca=None, scaler=None, attack_scaler=None, encoder=None) -> None:
 
+        VERSION = "1.4"
         # Load attack model
         if model is None:
-            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v1.1_2023-12-06.pkl"))
+            self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v{VERSION}_2023-12-06.pkl"))
         else:
             self.model = model
 
@@ -29,10 +30,10 @@ class Model():
             self.scaler = scaler
 
         # Load pca
-        if pca is None:
-            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.1_2023-12-06.pkl"))
-        else:
-            self.pca = pca
+        # if pca is None:
+        #     self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v{VERSION}_2023-12-06.pkl"))
+        # else:
+        #     self.pca = pca
 
         # Load Encoder
         if encoder is None:
@@ -49,7 +50,7 @@ class Model():
         pipeline = Pipeline([
             # ("feature_selection", FeatureSelection(FEATURE_SELECTION)),
             ("standard_scaler", self.scaler),
-            ("pca", self.pca),
+            # ("pca", self.pca),
             ("dnn_model", self.model)
             ])
         return pipeline

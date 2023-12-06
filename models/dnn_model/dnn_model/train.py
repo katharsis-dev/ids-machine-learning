@@ -34,13 +34,13 @@ def preprocess_labels(df_X, df_y, save=False):
 
     print(df_y["label"].value_counts())
     # Rename dos labels as benign
-    df_X, df_y = remove_rows(df_X, df_y, "dos", 0.90)
+    df_X, df_y = remove_rows(df_X, df_y, "dos", 0.95)
     df_y["label"] = df_y["label"].apply(lambda x: BENIGN_LABEL if "dos" in x else x)
     # Rename bot labels as benign
-    df_X, df_y = remove_rows(df_X, df_y, "bot", 0.70)
+    df_X, df_y = remove_rows(df_X, df_y, "bot", 0.80)
     df_y["label"] = df_y["label"].apply(lambda x: BENIGN_LABEL if "bot" in x else x)
     # Rename infiltration labels as benign
-    df_X, df_y = remove_rows(df_X, df_y, "infiltration", 0.80)
+    df_X, df_y = remove_rows(df_X, df_y, "infiltration", 0.90)
     df_y["label"] = df_y["label"].apply(lambda x: BENIGN_LABEL if "infiltration" in x else x)
 
     # Rename sql label as sql-injection
@@ -112,7 +112,7 @@ def preprocess(df, save=False):
     # print("Columns after feature selection:", len(X.columns))
 
     X = standarize_data(X, save=save)
-    X = pca_data(X, n_components=30, save=save)
+    # X = pca_data(X, n_components=30, save=save)
 
     y = onehotencode_data(y, save=save)
     print("One Hot Encoded Shape:", y.shape)
