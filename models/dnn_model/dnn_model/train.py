@@ -405,7 +405,7 @@ if __name__ == "__main__":
     # evaluate_pipeline(load_model("./saved_models/DNN_Pipeline_v1.1_2023-11-26.pkl"))
     # save_pipeline(load_model("./saved_models/DNN_Pipeline_v1.1_2023-11-26.pkl"))
 
-    train(save=True)
+    train(save=False)
     # create_test_data()
     # test_model("./saved_models/DNN_v1.1_2023-11-25.pkl")
 

@@ -9,6 +9,7 @@ from numpy import column_stack
 import pandas as pd
 import datetime
 from constants import IMPORT_PACKAGE
+import json
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -41,13 +42,15 @@ class IPData:
         for key in self.data:
             if key not in ignore_columns and self.data[key] > 10:
                 total_attack += self.data[key]
+                self.data[key] = int(self.data[key] * 0.50)
         try:
             if benign < 10:
                 benign = 1
             self.data["Confidence"] = round(total_attack / benign + total_attack, 3)
         except ZeroDivisionError:
             self.data["Confidence"] = 0.0
-        self.data["benign"] = self.data["benign"] * 0.25
+
+        self.data["benign"] = int(self.data["benign"] * 0.25)
 
     def has_attack(self):
         ignore_columns = ["IP", "Confidence", "benign"]
@@ -58,7 +61,7 @@ class IPData:
         return False
 
     def __str__(self):
-        return str(self.data)
+        return str(json.dumps(self.data, indent=4))
 
 
 class AttackTracker:
@@ -81,6 +84,7 @@ class AttackTracker:
         for ip in self.database:
             if self.database[ip].has_attack():
                 result += str(self.database[ip]) + "\n"
+        result += ("=" * 100) + "\n"
         return result
 
     def check_database(self, ip):
@@ -169,6 +173,25 @@ def check_command_available(command):
     except subprocess.CalledProcessError:
         return False
 
+def wait_for_file_to_finish_writing(file_path, timeout=600):
+    print(f"Waiting for {file_path} to finish writing")
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        try:
+            # Get the last modification time of the file
+            current_modification_time = os.path.getmtime(file_path)
+            
+            # Sleep for a short interval
+            time.sleep(1)
+            
+            # Check if the modification time has remained the same for a while
+            if os.path.getmtime(file_path) == current_modification_time:
+                return
+        except FileNotFoundError:
+            # Handle the case where the file doesn't exist yet
+            pass
+
+    raise TimeoutError("Timeout waiting for the file to finish writing")
 
 def process_new_files(folder_path, new_files):
     """
@@ -177,6 +200,7 @@ def process_new_files(folder_path, new_files):
     for file in new_files:
         if file.endswith('.pcap'):
             pcap_file_path = os.path.join(folder_path, file)
+            wait_for_file_to_finish_writing(pcap_file_path)
             csv_file_path = os.path.join(folder_path, file.replace(".pcap", ".csv"))
             convert_pcap_to_csv(pcap_file_path, csv_file_path)
             print(f"New CSV file '{csv_file_path}' has been created:")
@@ -202,7 +226,7 @@ def process_new_files(folder_path, new_files):
 
             result_df = result_df[columns_to_print]
             ATTACK_TRACKER.update(result_df)
-            print(result_df["attack_type"].value_counts())
+            print(result_df["attack_type"].value_counts(), "\n")
 
             suspicious_df = result_df[result_df["attack_type"] != BENIGN_LABEL]
             if len(suspicious_df) != 0:
@@ -256,8 +280,8 @@ def main():
         print("\t", tcpdump_command)
         # tcpdump_process = subprocess.Popen(tcpdump_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # print(f"tcpdump process started successfully")
-        time.sleep(5)
-        monitor_folder(folder_path, delay=5)
+        time.sleep(3)
+        monitor_folder(folder_path, delay=10)
 
     except KeyboardInterrupt:
         print("Monitoring stopped.")
