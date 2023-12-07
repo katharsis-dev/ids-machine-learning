@@ -15,7 +15,7 @@ from tensorflow.keras import metrics
 from tensorflow_ranking.python.keras.metrics import MeanAveragePrecisionMetric
 
 
-MAIN_VERSION = 1
+MAIN_VERSION = 2
 SAVE_FOLDER = "./saved_models/"
 
 
@@ -33,6 +33,7 @@ def preprocess_labels(df_X, df_y, save=False):
         return df_X, df_y
 
     print(df_y["label"].value_counts())
+
     # Rename dos labels as benign
     df_X, df_y = remove_rows(df_X, df_y, "dos", 0.95)
     df_y["label"] = df_y["label"].apply(lambda x: BENIGN_LABEL if "dos" in x else x)
@@ -42,6 +43,8 @@ def preprocess_labels(df_X, df_y, save=False):
     # Rename infiltration labels as benign
     df_X, df_y = remove_rows(df_X, df_y, "infiltration", 0.90)
     df_y["label"] = df_y["label"].apply(lambda x: BENIGN_LABEL if "infiltration" in x else x)
+
+    df_X, df_y = remove_rows(df_X, df_y, "heartbleed", 0.95)
 
     # Rename sql label as sql-injection
     df_y["label"] = df_y["label"].apply(lambda x: SQL_LABEL if "sql" in x else x)
@@ -73,6 +76,9 @@ def preprocess(df, save=False):
         return df
 
     print(df["label"].value_counts())
+
+    # Rename dos labels as benign
+    df = remove_rows(df, "heartbleed", 1)
     # Rename dos labels as benign
     df = remove_rows(df, "dos", 0.90)
     df["label"] = df["label"].apply(lambda x: BENIGN_LABEL if "dos" in x else x)
@@ -249,6 +255,8 @@ def train(save=True):
     print(df["label"].value_counts())
 
     df = clean_dataset(df)
+
+    print(df.info())
 
     # Full Classification
     X_train, X_test, y_train, y_test = preprocess(df.copy(), save=save)

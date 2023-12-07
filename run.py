@@ -1,3 +1,5 @@
+from decimal import DivisionByZero
+from inspect import Attribute
 import os
 import time
 import argparse
@@ -22,6 +24,87 @@ except Exception as e:
     print(f"Error failed to import model package: {e}")
     exit(1)
 
+
+class IPData:
+    def __init__(self, ip):
+        self.data = {"IP": ip, "benign": 0, "sql-injection": 0, "ssh-bruteforce": 0, "portscan": 0, "xss": 0, "ftp-bruteforce": 0, "web-bruteforce": 0, "Confidence": 0.0}
+
+    def update(self, attack_type):
+        if attack_type in self.data:
+            self.data[attack_type] = self.data[attack_type] + 1
+            self.calculate_confidence()
+
+    def calculate_confidence(self):
+        ignore_columns = ["IP", "Confidence", "benign"]
+        total_attack = 0
+        benign = self.data["benign"]
+        for key in self.data:
+            if key not in ignore_columns:
+                total_attack += self.data[key]
+        try:
+            self.data["Confidence"] = round(total_attack / benign, 3)
+        except ZeroDivisionError:
+            self.data["Confidence"] = round(total_attack / total_attack, 3)
+
+    def has_attack(self):
+        ignore_columns = ["IP", "Confidence", "benign"]
+        for key in self.data:
+            if key not in ignore_columns:
+                if self.data[key] > 0:
+                    return True
+        return False
+
+    def __str__(self):
+        return str(self.data)
+
+
+class AttackTracker:
+    columns_to_print = [
+                        "timestamp", 
+                        "protocol", 
+                        "src_mac", 
+                        "dst_mac", 
+                        "src_ip", 
+                        "src_port", 
+                        "dst_ip", 
+                        "dst_port", 
+                        "attack_type"
+                        ]
+    def __init__(self):
+        self.database = {}
+
+    def __str__(self):
+        result = ("=" * 30) + str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ("=" * 30) + "\n"
+        for ip in self.database:
+            if self.database[ip].has_attack():
+                result += str(self.database[ip]) + "\n"
+        return result
+
+    def check_database(self, ip):
+        if ip not in self.database:
+            return False
+        return True
+
+    def add_ip(self, ip):
+        self.database[ip] = IPData(ip)
+
+    def ip_data(self, ip):
+        if ip in self.database:
+            return self.database[ip]
+        return None
+
+    def update(self, new_data):
+        for index, row in new_data.iterrows():
+            ip = row["src_ip"]
+            attack_type = row["attack_type"]
+
+            ip_data = self.ip_data(ip)
+            if ip_data is None:
+                self.add_ip(ip)
+                ip_data = self.ip_data(ip)
+            ip_data.update(attack_type)
+
+ATTACK_TRACKER = AttackTracker()
 
 def check_folder(folder_path):
     if not os.path.exists(folder_path):
@@ -50,7 +133,7 @@ def test_function():
     print(f"Model loaded successfully, this means build was successful!")
 
 
-def monitor_folder(folder_path, delay=15):
+def monitor_folder(folder_path, delay=30):
     last_seen_files = set()
     print(f"Started Monitoring {folder_path}")
     while True:
@@ -115,14 +198,16 @@ def process_new_files(folder_path, new_files):
                                 ]
 
             result_df = result_df[columns_to_print]
+            ATTACK_TRACKER.update(result_df)
             print(result_df["attack_type"].value_counts())
 
             suspicious_df = result_df[result_df["attack_type"] != BENIGN_LABEL]
             if len(suspicious_df) != 0:
                 # print(suspicious_df)
                 print(suspicious_df["src_ip"].value_counts())
-                print(suspicious_df["attack_type"].value_counts())
+                # print(suspicious_df["attack_type"].value_counts())
                 print("\n")
+                print(ATTACK_TRACKER)
 
 
 def main():

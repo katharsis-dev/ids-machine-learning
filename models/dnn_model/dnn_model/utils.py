@@ -20,7 +20,7 @@ def onehotencode_data(y, encoder=None, save=False):
         encoder.fit(y)
         
         if save:
-            save_model(encoder, "OneHotEncoder", 1, SAVE_FOLDER, replace=True)
+            save_model(encoder, "OneHotEncoder", 1, SAVE_FOLDER, replace=False)
     y_encoded = encoder.transform(y).toarray()
     return y_encoded
 
@@ -30,7 +30,7 @@ def standarize_data(X, scaler=None, save=False):
         scaler.fit(X)
 
         if save:
-            save_model(scaler, "StandardScaler", 1, SAVE_FOLDER, replace=True)
+            save_model(scaler, "StandardScaler", 1, SAVE_FOLDER, replace=False)
 
     X_scaled = scaler.transform(X)
     return X_scaled
@@ -41,7 +41,7 @@ def pca_data(X, n_components=30, pca=None, save=False):
         pca.fit(X)
 
         if save:
-            save_model(pca, "PCA", 1, SAVE_FOLDER, replace=True)
+            save_model(pca, "PCA", 1, SAVE_FOLDER, replace=False)
 
     X_reduced = pca.transform(X)
     return X_reduced

@@ -16,7 +16,7 @@ class Model():
 
     def __init__(self, model=None, attack_model=None, pca=None, scaler=None, attack_scaler=None, encoder=None) -> None:
 
-        VERSION = "1.5"
+        VERSION = "2.1"
         # Load attack model
         if model is None:
             self.model = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/DNN_v{VERSION}_2023-12-06.pkl"))
@@ -25,19 +25,19 @@ class Model():
 
         # Load scaler
         if scaler is None:
-            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.1_2023-12-06.pkl"))
+            self.scaler = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/StandardScaler_v1.2_2023-12-06.pkl"))
         else:
             self.scaler = scaler
 
         # Load pca
         if pca is None:
-            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.1_2023-12-06.pkl"))
+            self.pca = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/PCA_v1.2_2023-12-06.pkl"))
         else:
             self.pca = pca
 
         # Load Encoder
         if encoder is None:
-            self.encoder = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/OneHotEncoder_v1.1_2023-12-06.pkl"))
+            self.encoder = load_model(pkg_resources.resource_filename(__package__, f"{SAVED_MODELS_MODULE}/OneHotEncoder_v1.2_2023-12-06.pkl"))
         else:
             self.encoder = encoder
 
