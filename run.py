@@ -39,14 +39,15 @@ class IPData:
         total_attack = 0
         benign = self.data["benign"]
         for key in self.data:
-            if key not in ignore_columns and self.data[key] > 5:
+            if key not in ignore_columns and self.data[key] > 10:
                 total_attack += self.data[key]
         try:
             if benign < 10:
                 benign = 1
-            self.data["Confidence"] = round(total_attack / benign, 3)
+            self.data["Confidence"] = round(total_attack / benign + total_attack, 3)
         except ZeroDivisionError:
             self.data["Confidence"] = 0.0
+        self.data["benign"] = self.data["benign"] * 0.25
 
     def has_attack(self):
         ignore_columns = ["IP", "Confidence", "benign"]
