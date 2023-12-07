@@ -45,7 +45,7 @@ class IPData:
         try:
             if benign < 10:
                 benign = 1
-            self.data["Confidence"] = round(total_attack / benign + total_attack, 3)
+            self.data["Confidence"] = round(total_attack / (benign + total_attack), 3)
         except ZeroDivisionError:
             self.data["Confidence"] = 0.0
 
