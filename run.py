@@ -42,7 +42,6 @@ class IPData:
         for key in self.data:
             if key not in ignore_columns and self.data[key] > 10:
                 total_attack += self.data[key]
-                self.data[key] = int(self.data[key] * 0.50)
         try:
             if benign < 10:
                 benign = 1
@@ -50,7 +49,6 @@ class IPData:
         except ZeroDivisionError:
             self.data["Confidence"] = 0.0
 
-        self.data["benign"] = int(self.data["benign"] * 0.25)
 
     def has_attack(self):
         ignore_columns = ["IP", "Confidence", "benign"]
@@ -61,7 +59,13 @@ class IPData:
         return False
 
     def __str__(self):
-        return str(json.dumps(self.data, indent=4))
+        result = str(json.dumps(self.data, indent=4))
+        ignore_columns = ["IP", "Confidence", "benign"]
+        for key in self.data:
+            if key not in ignore_columns and self.data[key] > 10:
+                self.data[key] = int(self.data[key] * 0.50)
+        self.data["benign"] = int(self.data["benign"] * 0.25)
+        return result
 
 
 class AttackTracker:
