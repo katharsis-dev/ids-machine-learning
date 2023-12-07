@@ -112,7 +112,7 @@ def preprocess(df, save=False):
     # print("Columns after feature selection:", len(X.columns))
 
     X = standarize_data(X, save=save)
-    # X = pca_data(X, n_components=30, save=save)
+    X = pca_data(X, n_components=30, save=save)
 
     y = onehotencode_data(y, save=save)
     print("One Hot Encoded Shape:", y.shape)

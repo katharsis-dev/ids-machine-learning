@@ -50,7 +50,7 @@ def test_function():
     print(f"Model loaded successfully, this means build was successful!")
 
 
-def monitor_folder(folder_path, delay=5):
+def monitor_folder(folder_path, delay=15):
     last_seen_files = set()
     print(f"Started Monitoring {folder_path}")
     while True:
@@ -163,7 +163,7 @@ def main():
         # Define the tcpdump command
         # tcpdump_command = f"sudo tcpdump -i {network_interface} -n -w {os.path.join(folder_path, 'capture_$(date +%Y%m%d%H%M%S).pcap')} -G 5"
         out_file = os.path.join(folder_path, "outfile-%s.pcap")
-        tcpdump_command = f"sudo tcpdump -i {network_interface} -w {out_file} -G 15 -n"
+        tcpdump_command = f"sudo tcpdump -i {network_interface} -w {out_file} -G 180 -n -U -vv"
         print("Run the following command in another terminal:")
         print("\t", tcpdump_command)
         # tcpdump_process = subprocess.Popen(tcpdump_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
